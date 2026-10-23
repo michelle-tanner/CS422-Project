@@ -1,0 +1,61 @@
+/* index.css
+   MySkindex global design tokens.
+   These are EXAMPLE values — swap them for the real brand colors/scale.
+   Everything else in the app should reference these variables instead of
+   hard-coding colors, spacing, radii, etc. directly. */
+
+:root {
+  /* ---- Brand / accent ---- */
+  --color-primary: #3f6f5f;
+  --color-primary-dark: #27493e;
+  --color-primary-light: #e4efe9;
+
+  /* ---- Surfaces / backgrounds ---- */
+  --color-bg: #fbf8f4;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f4efe8;
+
+  /* ---- Text ---- */
+  --color-text: #2c2722;
+  --color-text-muted: #6f665c;
+  --color-text-on-primary: #ffffff;
+
+  /* ---- Borders ---- */
+  --color-border: #e5ddd2;
+
+  /* ---- Status / semantic ---- */
+  --color-warning: #a35f3c;
+  --color-warning-bg: #f6e8df;
+  --color-success: #3f6f5f;
+  --color-success-bg: #e4efe9;
+  --color-danger: #b23b3b;
+  --color-danger-bg: #f8e3e3;
+
+  /* ---- Spacing scale ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* ---- Shadow ---- */
+  --shadow-sm: 0 1px 2px rgba(44, 39, 34, 0.06);
+  --shadow-md: 0 8px 24px rgba(44, 39, 34, 0.05);
+
+  /* ---- Typography ---- */
+  --font-base: "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-size-sm: 0.875rem;
+  --font-size-lg: 1.125rem;
+  --line-height-base: 1.6;
+
+  /* ---- Layout ---- */
+  --max-width: 1080px;
+}
