@@ -16,7 +16,7 @@ if (!document.getElementById("font-awesome")) {
 class MyHeader extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
-      <p>MySkindex</p>
+      <a href="home.html" class="logo">MySkindex</a>
         <!-- Pressing Enter submits this form, which goes to catalog.html?q=<what you typed> -->
         <form class="search" action="catalog.html" method="get" role="search">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
@@ -41,11 +41,11 @@ class MyHeader extends HTMLElement {
           box-shadow: var(--shadow-md);
         }
           
-        p {
+        my-header .logo {
           font-size: var(--font-size-2xl);
           font-weight: bolder;
           color: var(--color-text-muted);
-          margin: 0;
+          text-decoration: none; /* no link underline */
         }
 
         /* Search bar: the icon sits on top of the input, on the left */
