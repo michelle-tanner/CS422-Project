@@ -5,12 +5,13 @@
    hard-coding colors, spacing, radii, etc. directly. */
 
 :root {
-  /* ---- Brand / accent ---- */
-  --color-primary: #3f6f5f;
-  --color-primary-dark: #27493e;
-  --color-primary-light: #e4efe9;
+  /* ---- Pill Colors ---- */
+  --pill-default: #54BBE4;
+  --pill-good: #6DD294;
+  --pill-moderate: #E4AD54;
+  --pill-bad: #E45456;
 
-  /* ---- Surfaces / backgrounds ---- */
+  /* ---- Background Colors ---- */
   --color-bg: #fbe5de;;
   --color-surface: #ffffff;
   --color-surface-alt: #F4EEEC;;
@@ -22,14 +23,10 @@
 
   /* ---- Borders ---- */
   --color-border: #e5ddd2;
+  --color-border-dark: #2C2722;
 
-  /* ---- Status / semantic ---- */
-  --color-warning: #a35f3c;
-  --color-warning-bg: #f6e8df;
-  --color-success: #3f6f5f;
-  --color-success-bg: #e4efe9;
-  --color-danger: #b23b3b;
-  --color-danger-bg: #f8e3e3;
+  /* ---- Accents ---- */
+  --color-accent: #E89E8C;
 
   /* ---- Spacing scale ---- */
   --space-xs: 4px;
