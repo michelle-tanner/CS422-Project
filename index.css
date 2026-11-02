@@ -11,13 +11,13 @@
   --color-primary-light: #e4efe9;
 
   /* ---- Surfaces / backgrounds ---- */
-  --color-bg: #fbf8f4;
+  --color-bg: #e6d6d0;;
   --color-surface: #ffffff;
-  --color-surface-alt: #f4efe8;
+  --color-surface-alt: #F4EEEC;;
 
   /* ---- Text ---- */
-  --color-text: #2c2722;
-  --color-text-muted: #6f665c;
+  --color-text: #2C2722;
+  --color-text-muted: #7C574F;
   --color-text-on-primary: #ffffff;
 
   /* ---- Borders ---- */
@@ -54,6 +54,9 @@
   --font-size-base: 16px;
   --font-size-sm: 0.875rem;
   --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 4rem;
   --line-height-base: 1.6;
 
   /* ---- Layout ---- */
@@ -78,13 +81,11 @@ body {
   line-height: var(--line-height-base);
 }
 
-/* Custom elements are inline by default */
 my-header,
 my-footer {
   display: block;
 }
 
-/* Sticky stays in the flow, so main starts below it, not behind it */
 my-header {
   position: sticky;
   top: 0;
