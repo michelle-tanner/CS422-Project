@@ -76,7 +76,7 @@ class MyHeader extends HTMLElement {
 
         my-header .search input:focus {
           outline: none;
-          border-color: var(--color-text);
+          border-color: var(--color-border-dark);
         }
 
         my-header nav {
