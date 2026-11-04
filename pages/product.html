@@ -13,10 +13,163 @@
   <my-header></my-header>
 
   <main>
-    <h1>Product page placeholder</h1>
+    <!-- TOP: image + TEXT -->
+    <section class="top">
+      <img class="product-image" src="../images/product-placeholder.png" alt="Product image placeholder" />
+
+      <!-- TEXT -->
+      <div class="text">
+        <p class="brand">Brand name</p>
+        <h1 class="product-name">Product name</h1>
+        <p class="country">Country</p>
+        <p class="product-type">Product type</p>
+        <p class="description">Product description placeholder.</p>
+      </div>
+    </section>
+
+    <!-- INGREDIENTS: OVERVIEW + KEY -->
+    <section class="ingredients">
+
+      <!-- OVERVIEW: "Ingredients Overview" + line + overview content -->
+      <div class="overview">
+        <!-- Heading on the left, toggle on the right -->
+        <div class="section">
+          <h2>Ingredients Overview</h2>
+
+          <!-- role="switch" + aria-checked tell screen readers it's on/off.
+               What it toggles is TBD; the script below just flips it. -->
+          <button type="button" class="toggle" role="switch" aria-checked="false"
+                  aria-label="Toggle (TBD)"></button>
+        </div>
+        <hr />
+        <p>Overview placeholder (TBD)</p>
+      </div>
+
+      <!-- KEY: "Key Ingredients" + line + KEY_INGREDIENTS -->
+      <div class="key">
+        <h2>Key Ingredients</h2>
+        <hr />
+
+        <!-- KEY_INGREDIENTS -->
+        <div class="key-ingredients">
+          <p>Key ingredients placeholder (TBD)</p>
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
   <my-footer></my-footer>
 
 </body>
 </html>
+
+  <style>
+    /* TOP: image + TEXT side by side */
+    .top {
+      display: flex;
+      gap: var(--space-2xl);
+    }
+
+    .product-image {
+      width: 300px;
+      height: 300px;
+      flex-shrink: 0; /* don't let the text squeeze it */
+      background-color: var(--color-surface);
+    }
+
+    /* TEXT: brand, product, country, type, description stacked */
+    .text {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* INGREDIENTS: OVERVIEW + KEY */
+    .ingredients {
+      display: flex;
+      gap: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+
+    /* Each side takes half the row */
+    .overview,
+    .key {
+      flex: 1;
+    }
+
+    /* OVERVIEW and KEY: heading + line + content stacked */
+    .overview,
+    .key {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .overview h2,
+    .key h2 {
+      margin: 0 0 var(--space-sm); /* sit the line right under the heading */
+    }
+
+    .overview hr,
+    .key hr {
+      width: 100%;
+      margin: 0 0 var(--space-md);
+      border: none;
+      border-top: 2px solid rgba(0, 0, 0, 0.50);
+    }
+
+    /* Heading + toggle row: pushed to opposite ends */
+    .section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-sm); /* the gap above the line moves here... */
+    }
+
+    .section h2 {
+      margin: 0; /* ...so the toggle centers on the heading text exactly */
+    }
+
+    /* Toggle: a pill track with a round knob (the ::before) */
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      padding: 0;
+      border: none;
+      border-radius: var(--radius-pill);
+      background-color: rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+    }
+
+    .toggle::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: var(--color-surface);
+      transition: left 0.2s;
+    }
+
+    /* On: accent track, knob slides right */
+    .toggle[aria-checked="true"] {
+      background-color: var(--color-accent);
+    }
+
+    .toggle[aria-checked="true"]::before {
+      left: 25px;
+    }
+  </style>
+
+  <script>
+    // Flip the toggle on click. Hook real behavior in here later.
+    document.querySelector(".toggle").addEventListener("click", (event) => {
+      const toggle = event.currentTarget;
+      const isOn = toggle.getAttribute("aria-checked") === "true";
+      toggle.setAttribute("aria-checked", String(!isOn));
+    });
+  </script>
