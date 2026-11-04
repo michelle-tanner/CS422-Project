@@ -153,18 +153,22 @@ class SkinConcernsList extends HTMLElement {
           display: none;
         }
 
-        /* arrow */
+        /* arrow: a 36x18 box clipped into a down-pointing triangle, filled
+           with the page background. background-attachment: fixed lines the
+           gradient up with the window, so the arrow shows exactly the slice
+           of background behind it instead of its own tiny gradient.
+           Note: no transform here. A transform makes the browser ignore
+           "fixed", so the arrow is centered with calc() instead. */
         skin-concerns-list .concern-panel::before {
           content: "";
           position: absolute;
           top: 0;
-          left: var(--arrow-x, 50%);
-          transform: translateX(-50%);
-          width: 0;
-          height: 0;
-          border-left: 18px solid transparent;
-          border-right: 18px solid transparent;
-          border-top: 18px solid var(--color-bg);
+          left: calc(var(--arrow-x, 50%) - 18px); /* minus half the width = centered */
+          width: 36px;
+          height: 18px;
+          clip-path: polygon(0 0, 100% 0, 50% 100%); /* top-left, top-right, bottom-middle */
+          background: var(--page-bg);
+          background-attachment: fixed;
         }
 
         skin-concerns-list .panel-left,

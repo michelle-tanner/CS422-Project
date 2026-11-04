@@ -69,6 +69,10 @@
   /* ---- Layout ---- */
   --max-width: 1080px;
   --z-header: 9999;
+
+  /* ---- Page background ----
+     Radial glow: white in the middle fading out to --color-bg. */
+  --page-bg: radial-gradient(circle at center, var(--color-surface) 0%, var(--color-bg) 70%);
 }
 
 * {
@@ -82,7 +86,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: var(--color-bg);
+  background: var(--page-bg);
+  background-attachment: fixed; /* sized to the window, so it doesn't stretch as the page grows */
   color: var(--color-text);
   font-family: var(--font-base);
   line-height: var(--line-height-base);
