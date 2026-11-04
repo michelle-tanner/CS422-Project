@@ -4,15 +4,6 @@
 // These are real page-to-page links now (full navigation), not hash routes.
 // The header's styles live in the <style> block below, so pages don't need a separate <link>.
 
-// Load the Font Awesome icon library once, so pages don't need their own <link>.
-if (!document.getElementById("font-awesome")) {
-  const fa = document.createElement("link");
-  fa.id = "font-awesome";
-  fa.rel = "stylesheet";
-  fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css";
-  document.head.appendChild(fa);
-}
-
 class MyHeader extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `

@@ -1,3 +1,7 @@
+/* Load the Font Awesome icon library once, so pages don't need their own <link>. */
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css");
+
 /* index.css
    MySkindex global design tokens.
    These are EXAMPLE values — swap them for the real brand colors/scale.
@@ -12,7 +16,7 @@
   --pill-bad: #E45456;
 
   /* ---- Background Colors ---- */
-  --color-bg: #fbe5de;;
+  --color-bg: #F4EEEC;;
   --color-surface: #ffffff;
   --color-surface-alt: #F4EEEC;;
 
@@ -20,6 +24,9 @@
   --color-text: #2C2722;
   --color-text-muted: #7C574F;
   --color-text-on-primary: #ffffff;
+  --color-text-green: #509C8E;
+  --color-text-blue: #356B89;
+  --color-text-red: #C65F5E;
 
   /* ---- Borders ---- */
   --color-border: #e5ddd2;

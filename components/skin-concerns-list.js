@@ -8,20 +8,6 @@
 // Optional attribute:
 //   direction="column"  -> stack the buttons vertically instead of in a row
 
-// Load the Font Awesome icon library once (header.js does the same thing,
-// so this only matters on a page that doesn't use <my-header>).
-if (!document.getElementById("font-awesome")) {
-  const fa = document.createElement("link");
-  fa.id = "font-awesome";
-  fa.rel = "stylesheet";
-  fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css";
-  document.head.appendChild(fa);
-}
-
-// One entry per button.
-//   label -> the text on the button
-//   icon  -> a Font Awesome class name (find more at fontawesome.com/icons)
-//   id    -> the localStorage key for this concern's "future" information
 const SKIN_CONCERNS = [
   { label: "Redness",        icon: "fa-fire",          id: "redness" },
   { label: "Acne",           icon: "fa-circle-dot",    id: "acne" },
@@ -37,16 +23,14 @@ const SKIN_CONCERNS = [
 
 class SkinConcernsList extends HTMLElement {
   connectedCallback() {
-    // .map turns each concern object into one <li><button> string,
-    // and .join("") glues them together into one block of HTML.
     this.innerHTML = `
       <ul class="items">
         ${SKIN_CONCERNS.map(
           (concern) => `
             <li>
-              <!-- aria-labelledby gives the icon-only button its name for screen readers -->
               <button type="button" class="concern" data-id="${concern.id}"
-                      aria-labelledby="${concern.id}-label">
+                      aria-labelledby="${concern.id}-label"
+                      aria-expanded="false" aria-controls="concern-panel">
                 <i class="fa-solid ${concern.icon}" aria-hidden="true"></i>
               </button>
               <span class="label" id="${concern.id}-label">${concern.label}</span>
@@ -54,32 +38,47 @@ class SkinConcernsList extends HTMLElement {
           `
         ).join("")}
       </ul>
+
+      <!-- Info Panel (hidden unless user clicks skin concern button); content is filled in using showPanel() function -->
+      <section class="concern-panel" id="concern-panel" hidden></section>
     `;
 
-    // One click listener for the whole list: find which button was clicked
-    // and read its data-id.
+    this.panel = this.querySelector(".concern-panel");
+
+    // Read data-id for button clicked, find the concern in SKIN_CONCERNS, and show its info in the panel.
     this.addEventListener("click", (event) => {
       const button = event.target.closest("button.concern");
       if (!button) return;
+      // close already open panel 
+      if (button.classList.contains("is-active")) {
+        this.closePanel();
+        return;
+      }
 
       const id = button.dataset.id;
       const data = getConcernData(id);
+      const concern = SKIN_CONCERNS.find((c) => c.id === id);
 
-      // Placeholder until the "future" information exists.
-      console.log(`Clicked "${id}". Data from localStorage:`, data);
+      this.setActive(button);
+      this.showPanel(concern, data);
 
-      // Let the page react to the click: listen for "concern-select" on the
-      // list and use event.detail.id / event.detail.data.
       this.dispatchEvent(
         new CustomEvent("concern-select", { detail: { id, data }, bubbles: true })
       );
     });
 
-    // Add the styles once per page, not once per list.
+    // Escape closes the panel too.
+    this.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !this.panel.hidden) this.closePanel();
+    });
+
+    // Styles 
     if (!document.getElementById("skin-concerns-list-styles")) {
       const style = document.createElement("style");
       style.id = "skin-concerns-list-styles";
       style.textContent = `
+
+        /* ---- SKIN CONCERN LIST ---- */
         skin-concerns-list {
           display: block;
         }
@@ -94,29 +93,22 @@ class SkinConcernsList extends HTMLElement {
           padding: 40px 40px;
         }
 
-        skin-concerns-list[direction="column"] .items {
-          flex-direction: column;
-        }
-
-        /* Each item: the square button with its label underneath */
+        /* button + label */
         skin-concerns-list .items li {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: var(--space-sm);
-          width: 140px; /* a little wider than the button so labels like "Clogged pores" fit */
+          gap: var(--space-md);
+          width: 140px; 
         }
 
-        /* The square button: same width and height, icon centered */
+        /* button */
         skin-concerns-list .concern {
-          display: flex;
-          align-items: center;
-          justify-content: center;
           width: 140px;
           height: 140px;
           padding: 0;
           background-color: var(--color-accent);
-          border: 3px solid var(--color-border-dark);
+          border: 4px solid var(--color-border-dark);
           border-radius: var(--radius-xl);
           cursor: pointer;
         }
@@ -127,9 +119,143 @@ class SkinConcernsList extends HTMLElement {
           background-color: var(--color-accent-muted);
         }
 
+        skin-concerns-list .concern.is-active {
+          width: 156px;
+          height: 156px;
+          margin: -8px;
+          background-color: var(--color-accent-muted);
+          border-color: var(--color-accent-muted);
+        }
+
+        /* button icon */ 
         skin-concerns-list .concern i {
           font-size: var(--font-size-3xl);
           color: var(--color-border-dark);
+        }
+
+        skin-concerns-list .concern.is-active i {
+          font-size: calc(var(--font-size-3xl) + 16px);
+        }
+
+        /* ---- INFO PANEL ---- */
+        skin-concerns-list .concern-panel {
+          position: relative; /* so the arrow below is placed relative to the panel */
+          display: grid;
+          grid-template-columns: 65fr 35fr; /* left side 65% | right side 35% */
+          margin: 0 40px 40px;
+          overflow: hidden;
+          font-family: var(--font-base);
+          color: var(--color-text);
+        }
+
+        /* hidden attribute */ 
+        skin-concerns-list .concern-panel[hidden] {
+          display: none;
+        }
+
+        /* arrow */
+        skin-concerns-list .concern-panel::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: var(--arrow-x, 50%);
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 18px solid transparent;
+          border-right: 18px solid transparent;
+          border-top: 18px solid var(--color-bg);
+        }
+
+        skin-concerns-list .panel-left,
+        skin-concerns-list .panel-right {
+          padding: var(--space-lg) var(--space-xl);
+        }
+
+        skin-concerns-list .panel-left {
+          background-color: var(--color-accent-muted); 
+        }
+
+        skin-concerns-list .panel-right {
+          display: flex;
+          flex-direction: column; 
+          gap: var(--space-lg);
+          background-color: var(--color-surface); 
+        }
+
+        /* Grows to fill the leftover height, so the button sits at the bottom */
+        skin-concerns-list .panel-right-content {
+          flex: 1;
+        }
+
+
+        skin-concerns-list .explore-btn {
+          display: flex;
+          align-items: center;
+          gap: var(--space-lg);
+          align-self: flex-start; /* don't stretch across the full column */
+          width: min-content; /* shrink to the narrowest fit: icon + longest word, so the text wraps */
+          padding: var(--space-sm) var(--space-md);
+          border-radius: var(--radius-md);
+          color: var(--color-border-dark);
+          font-size: var(--font-size-xl);
+          font-weight: 700;
+          text-decoration: none; /* no underline on the link */
+        }
+
+        skin-concerns-list .explore-btn i {
+          font-size: var(--font-size-2xl);
+        }
+
+        skin-concerns-list .explore-btn span {
+          font-size: var(--font-size-lg);
+          line-height: 1.2; /* keeps the two wrapped lines snug */
+        }
+
+        skin-concerns-list .explore-btn:hover,
+        skin-concerns-list .explore-btn:focus-visible {
+          background-color: var(--color-surface-alt);
+        }
+
+        skin-concerns-list .concern-panel h2 {
+          margin: 0 0 var(--space-sm);
+          font-size: var(--font-size-xl);
+        }
+
+        skin-concerns-list .concern-panel h3 {
+          margin: var(--space-lg) 0 var(--space-xs);
+          font-size: var(--font-size-lg);
+        }
+
+        skin-concerns-list .concern-panel h3:first-child {
+          margin-top: 0;
+        }
+
+        skin-concerns-list .concern-panel p,
+        skin-concerns-list .concern-panel ul {
+          margin: 0;
+        }
+
+        skin-concerns-list .concern-panel ul {
+          padding-left: var(--space-lg);
+        }
+
+        skin-concerns-list .go-for     { color: var(--color-text-green); } /* #509C8E */
+        skin-concerns-list .these-help { color: var(--color-text-blue); }  /* #356B89 */
+        skin-concerns-list .avoid      { color: var(--color-text-red); }   /* #C65F5E */
+
+        /* Gray italic text for anything that doesn't have real data yet */
+        skin-concerns-list .placeholder {
+          color: var(--color-text-muted);
+          font-style: italic;
+        }
+
+        /* Narrow screens: stack the two sides */
+        @media (max-width: 700px) {
+          skin-concerns-list .concern-panel {
+            grid-template-columns: 1fr;
+            margin: 0 var(--space-md) var(--space-xl);
+          }
         }
 
         skin-concerns-list .label {
@@ -143,6 +269,115 @@ class SkinConcernsList extends HTMLElement {
       document.head.appendChild(style);
     }
   }
+
+  setActive(button) {
+    this.querySelectorAll("button.concern").forEach((b) => {
+      const isThis = b === button;
+      b.classList.toggle("is-active", isThis);
+      b.setAttribute("aria-expanded", String(isThis));
+    });
+  }
+
+  // Fills the panel with one concern's info and shows it.
+  //
+  // Expected data shape (saved in localStorage under the concern's id):
+  //   {
+  //     "description": "What it is...",
+  //     "causes":      "Common causes...",   (a string, or an array of strings)
+  //     "goFor":       ["...", "..."],
+  //     "theseHelp":   ["...", "..."],
+  //     "avoid":       ["...", "..."]
+  //   }
+  // Anything missing shows placeholder text instead.
+  showPanel(concern, data) {
+    const d = data || {};
+
+    this.panel.setAttribute("aria-label", `${concern.label} information`);
+    this.panel.innerHTML = `
+      <div class="panel-left">
+        <h2>${escapeHtml(concern.label)}</h2>
+        ${renderText(d.description, `Description of ${concern.label.toLowerCase()} goes here.`)}
+
+        <h3>Common causes</h3>
+        ${Array.isArray(d.causes)
+          ? renderList(d.causes, "Common causes go here.")
+          : renderText(d.causes, "Common causes go here.")}
+      </div>
+
+      <div class="panel-right">
+        <!-- flex: 1 makes this grow and fill the space, pushing the
+             Explore button to the bottom of the panel -->
+        <div class="panel-right-content">
+          <h3 class="go-for">Go For</h3>
+          ${renderList(d.goFor, "Ingredients to look for go here.")}
+
+          <h3 class="these-help">These Help</h3>
+          ${renderList(d.theseHelp, "Helpful products go here.")}
+
+          <h3 class="avoid">Avoid</h3>
+          ${renderList(d.avoid, "Things to avoid go here.")}
+        </div>
+
+        <!-- A link (not a <button>) because it goes to another page.
+             ?concern= lets catalog.html know which concern was picked. -->
+        <a class="explore-btn" href="catalog.html?concern=${encodeURIComponent(concern.id)}">
+          <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          <span>Explore functions</span>
+        </a>
+      </div>
+    `;
+
+    this.panel.hidden = false;
+    this.positionArrow();
+    window.addEventListener("resize", this.positionArrow);
+    this.panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Hides the panel and puts focus back on the button that opened it.
+  closePanel() {
+    const active = this.querySelector("button.concern.is-active");
+    this.setActive(null);
+    this.panel.hidden = true;
+    window.removeEventListener("resize", this.positionArrow);
+    if (active) active.focus();
+  }
+
+  // Moves the arrow so it sits under the center of the selected button.
+  positionArrow = () => {
+    const active = this.querySelector("button.concern.is-active");
+    if (!active || this.panel.hidden) return;
+
+    const button = active.getBoundingClientRect();
+    const panel = this.panel.getBoundingClientRect();
+    const x = button.left + button.width / 2 - panel.left; // relative to the panel's left edge
+    this.panel.style.setProperty("--arrow-x", `${x}px`);
+  };
+}
+
+// ---- Small helpers for building the panel's HTML ----
+
+// Makes text safe to put into innerHTML (so saved data can't inject markup).
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+// A paragraph of real text, or a placeholder paragraph if there's none.
+function renderText(text, placeholder) {
+  return text
+    ? `<p>${escapeHtml(text)}</p>`
+    : `<p class="placeholder">${placeholder}</p>`;
+}
+
+// A bullet list from an array, or a placeholder if the array is empty/missing.
+function renderList(items, placeholder) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return `<p class="placeholder">${placeholder}</p>`;
+  }
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
 
 // Reads a concern's saved data from localStorage, using its id as the key.
