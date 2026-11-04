@@ -79,6 +79,18 @@
   box-sizing: border-box;
 }
 
+/* Hide scrollbar (MAY NOT NEED because we only scroll on <main> now--POSSIBLE DELETE) */
+html {
+  scrollbar-width: none; /* Firefox, Chrome, Edge */
+  overflow-x: clip; /* no sideways scrolling. Setting overflow here (not only on body)
+                       also stops body's overflow from being handed to the window,
+                       so body's "overflow: clip" below clips body itself. */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Safari and older Chrome */
+}
+
 /* Page is at least the window height; main fills the leftover space and
    grows with its content, pushing the footer down. */
 body {
@@ -87,10 +99,11 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   background: var(--page-bg);
-  background-attachment: fixed; /* sized to the window, so it doesn't stretch as the page grows */
+  background-attachment: fixed; 
   color: var(--color-text);
   font-family: var(--font-base);
   line-height: var(--line-height-base);
+  overflow: clip;
 }
 
 my-header,
@@ -118,4 +131,49 @@ main {
 my-footer {
   padding: var(--space-md);
   background: var(--color-surface-alt);
+}
+
+/* ---- Decorative bubbles (outside <main>) ----
+   They take up no space, so the layout doesn't change; the bubble image hangs off of them. */
+.bubble-anchor {
+  position: relative;
+  height: 0;
+}
+
+.bubble {
+  position: absolute;
+  z-index: -1;          
+  pointer-events: none; 
+}
+
+.bubble-top {
+  top: 0;             
+  right: 0;
+  transform: translate(40%, -25%);
+}
+
+.bubble-bottom {
+  bottom: 0;           
+  left: 0;
+  transform: translate(-40%, 25%);
+}
+
+/* ---- Pages where only <main> scrolls ----
+  .main-scroll class on the <body> locks the page to the window height, so the header, footer, and bubbles don't move. 
+  <main> is what holds the content and is what scrolls when the content is more than the height of the window. */
+body.main-scroll {
+  height: 100dvh; /* exactly the window height (body above only sets a minimum) */
+}
+
+body.main-scroll main {
+  min-height: 0;   
+  overflow-y: auto;
+  max-width: none;
+  padding-inline: max(var(--space-md), calc((100% - var(--max-width)) / 2 + var(--space-md)));
+
+  scrollbar-width: none; /* hide scrollbar */
+}
+
+body.main-scroll main::-webkit-scrollbar {
+  display: none;
 }

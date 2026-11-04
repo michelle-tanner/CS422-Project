@@ -9,15 +9,25 @@
   <script src="../components/footer.js" defer></script>
   <script src="../components/skin-concerns-list.js" defer></script>
 </head>
-<body>
+<body class="main-scroll">
 
   <my-header></my-header>
+
+  <!-- Decorative bubble, top right, just under the header -->
+  <div class="bubble-anchor">
+    <img class="bubble bubble-top" src="../bubble1.png" alt="" />
+  </div>
 
   <main>
     <h1 class="heading"><i>Pick a skin concern!</i></h1>
     <skin-concerns-list></skin-concerns-list>
 
   </main>
+
+  <!-- Decorative bubble, bottom left, just above the footer -->
+  <div class="bubble-anchor">
+    <img class="bubble bubble-bottom" src="../bubble2.png" alt="" />
+  </div>
 
   <my-footer></my-footer>
 
@@ -30,14 +40,5 @@
     justify-content: center;
     font-size: var(--font-size-2xl);
     color: var(--color-text-muted);
-  }
-
-  /* Hide scrollbar */
-  html {
-    scrollbar-width: none; /* Firefox, Chrome, Edge */
-  }
-
-  html::-webkit-scrollbar {
-    display: none; /* Safari and older Chrome */
   }
 </style>
