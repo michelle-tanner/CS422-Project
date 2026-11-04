@@ -23,10 +23,11 @@
 
   /* ---- Borders ---- */
   --color-border: #e5ddd2;
-  --color-border-dark: #2C2722;
+  --color-border-dark: #44231C;
 
   /* ---- Accents ---- */
   --color-accent: #E89E8C;
+  --color-accent-muted: #F7D2C9;
 
   /* ---- Spacing scale ---- */
   --space-xs: 4px;
@@ -40,6 +41,8 @@
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-2xl: 48px;
   --radius-pill: 999px;
 
   /* ---- Shadow ---- */

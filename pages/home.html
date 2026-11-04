@@ -7,17 +7,31 @@
   <link rel="stylesheet" href="../index.css" />
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/skin-concerns-list.js" defer></script>
 </head>
 <body>
 
   <my-header></my-header>
 
   <main>
-    <h1>Home page placeholder</h1>
-  
+    <h1 class="heading"><i>Pick a skin concern!</i></h1>
+    <skin-concerns-list></skin-concerns-list>
+
   </main>
 
   <my-footer></my-footer>
 
 </body>
 </html>
+
+<style>
+  .heading {
+    display: flex;
+    justify-content: center;
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-muted);
+    padding: 0;
+    margin: 0;
+
+  }
+</style>
