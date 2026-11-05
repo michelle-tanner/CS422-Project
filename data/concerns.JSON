@@ -1,0 +1,94 @@
+{
+  "concerns": {
+    "redness": {
+      "label": "Redness",
+      "icon": "fa-fire",
+      "description": "Skin irritation, flushing, or inflammation often caused by broken capillaries, rosacea, or external triggers.",
+      "gofor": ["Centella Asiatica", "Niacinamide", "Allantoin", "Azelaic Acid", "Green Tea Extract"],
+      "avoid": ["Alcohol Denat", "Fragrance", "Menthol", "Salicylic Acid", "Glycolic Acid"],
+      "causes": ["Rosacea", "Weather extremes", "Spicy foods", "Over-exfoliation", "Sun damage"],
+      "thesehelp": ["Soothing serum", "Barrier cream", "Mineral sunscreen", "Gentle cleanser"]
+    },
+    "acne": {
+      "label": "Acne",
+      "icon": "fa-circle-dot",
+      "description": "Breakouts, blemishes, and pimples that occur when hair follicles become plugged with oil and dead skin cells.",
+      "gofor": ["Salicylic Acid", "Benzoyl Peroxide", "Retinol", "Tea Tree Oil", "Niacinamide"],
+      "avoid": ["Coconut Oil", "Isopropyl Myristate", "Sodium Lauryl Sulfate", "Heavy Silicones"],
+      "causes": ["Hormonal fluctuations", "Excess sebum", "Bacteria", "Stress", "Diet"],
+      "thesehelp": ["BHA Exfoliant", "Spot treatment", "Gel moisturizer", "Cleanser"]
+    },
+    "antiAging": {
+      "label": "Anti-aging",
+      "icon": "fa-hourglass-half",
+      "description": "The natural development of fine lines, wrinkles, loss of elasticity, and sagging skin over time.",
+      "gofor": ["Retinol", "Peptides", "Vitamin C", "Hyaluronic Acid", "Coenzyme Q10"],
+      "avoid": ["Alcohol Denat", "Harsh physical scrubs", "Drying sulfates"],
+      "causes": ["Collagen depletion", "UV radiation", "Pollution", "Repetitive facial expressions"],
+      "thesehelp": ["Retinol serum", "Antioxidant", "Night cream", "Sunscreen"]
+    },
+    "dryness": {
+      "label": "Dryness",
+      "icon": "fa-droplet-slash",
+      "description": "A lack of moisture and oil in the skin's outer layer, leading to a tight, flaky, or rough complexion.",
+      "gofor": ["Ceramides", "Glycerin", "Hyaluronic Acid", "Squalane", "Shea Butter"],
+      "avoid": ["Salicylic Acid", "Alcohol Denat", "Sodium Lauryl Sulfate", "Witch Hazel"],
+      "causes": ["Cold weather", "Low humidity", "Hot showers", "Aging", "Harsh soaps"],
+      "thesehelp": ["Rich cream moisturizer", "Hydrating toner", "Cleansing oil", "Face oil"]
+    },
+    "darkSpots": {
+      "label": "Dark spots",
+      "icon": "fa-sun",
+      "description": "Hyperpigmentation and uneven skin tone caused by localized increases in melanin production.",
+      "gofor": ["Vitamin C", "Alpha Arbutin", "Kojic Acid", "Tranexamic Acid", "Licorice Root Extract"],
+      "avoid": ["Unprotected UV exposure", "Harsh picking of blemishes"],
+      "causes": ["Sun exposure", "Post-inflammatory hyperpigmentation", "Hormones", "Aging"],
+      "thesehelp": ["Brightening serum", "Chemical peel", "Sunscreen", "Antioxidant"]
+    },
+    "cloggedPores": {
+      "label": "Clogged pores",
+      "icon": "fa-braille",
+      "description": "A buildup of dead skin cells, oil, and debris trapped inside the pores, often forming comedones.",
+      "gofor": ["Salicylic Acid", "Clay", "Retinol", "Glycolic Acid", "Niacinamide"],
+      "avoid": ["Comedogenic oils", "Heavy waxes", "Petrolatum"],
+      "causes": ["Excess oil production", "Poor cleansing habits", "Makeup buildup", "Dead skin accumulation"],
+      "thesehelp": ["BHA Exfoliant", "Clay mask", "Cleanser", "Oil cleanser"]
+    },
+    "texture": {
+      "label": "Texture",
+      "icon": "fa-hand-dots",
+      "description": "Roughness, bumps, or uneven skin surface characteristics that disrupt a smooth appearance.",
+      "gofor": ["Glycolic Acid", "Lactic Acid", "Retinol", "PHA", "Enzymes"],
+      "avoid": ["Rough walnut scrubs", "Drying alcohols"],
+      "causes": ["Dead skin buildup", "Dehydration", "Sun damage", "Acne scarring"],
+      "thesehelp": ["AHA Exfoliant", "Retinol serum", "Smoothing toner", "Enzyme peel"]
+    },
+    "sensitiveSkin": {
+      "label": "Sensitive skin",
+      "icon": "fa-feather",
+      "description": "A hyper-reactive skin type prone to burning, stinging, redness, or allergic reactions from products or environments.",
+      "gofor": ["Allantoin", "Colloidal Oatmeal", "Ceramides", "Panthenol", "Centella Asiatica"],
+      "avoid": ["Fragrance", "Essential Oils", "Parabens", "Chemical sunscreens", "Glycolic Acid"],
+      "causes": ["Compromised skin barrier", "Genetics", "Allergens", "Aggressive skin treatments"],
+      "thesehelp": ["Barrier cream", "Soothing serum", "Hypoallergenic cleanser", "Mineral sunscreen"]
+    },
+    "dullness": {
+      "label": "Dullness",
+      "icon": "fa-cloud",
+      "description": "A lack of radiance, glow, and luminosity, often making the skin appear flat, tired, or gray.",
+      "gofor": ["Vitamin C", "Glycolic Acid", "Niacinamide", "Lactic Acid", "Fermented ingredients"],
+      "avoid": ["Alcohol Denat", "Heavy mattress-like foundations without hydration"],
+      "causes": ["Slow cell turnover", "Dehydration", "Pollution", "Lack of sleep", "Smoking"],
+      "thesehelp": ["Brightening serum", "AHA Exfoliant", "Antioxidant", "Hydrating mist"]
+    },
+    "oiliness": {
+      "label": "Oiliness",
+      "icon": "fa-droplet",
+      "description": "An overproduction of sebum by the sebaceous glands, resulting in a shiny complexion and enlarged pores.",
+      "gofor": ["Niacinamide", "Salicylic Acid", "Zinc PCA", "Green Tea Extract", "Clay"],
+      "avoid": ["Heavy mineral oil", "Coconut oil", "Aggressive stripping alcohols"],
+      "causes": ["Genetics", "Hormonal imbalances", "Over-washing", "Humid weather"],
+      "thesehelp": ["Mattifying moisturizer", "BHA Exfoliant", "Gel cleanser", "Clay mask"]
+    }
+  }
+}
