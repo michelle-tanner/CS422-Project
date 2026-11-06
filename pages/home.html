@@ -19,7 +19,7 @@
   </div>
 
   <main>
-    <h1 class="heading"><i>Pick a skin concern!</i></h1>
+    <h1 class="heading">Search Your Skin Concern</h1>
     <skin-concerns-list></skin-concerns-list>
 
   </main>
@@ -29,16 +29,25 @@
     <img class="bubble bubble-bottom" src="../bubble2.png" alt="" />
   </div>
 
-  <my-footer></my-footer>
+  <!-- <my-footer></my-footer> -->
 
 </body>
 </html>
 
 <style>
+  /* Center the content in <main> vertically.
+     "safe" falls back to top alignment if the content is taller than <main>, so it can still scroll. */
+  main {
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
+  }
+
   .heading {
     display: flex;
     justify-content: center;
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-3xl);
     color: var(--color-text-muted);
+    margin: 0;
   }
 </style>

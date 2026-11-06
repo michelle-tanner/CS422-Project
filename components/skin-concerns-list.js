@@ -8,6 +8,10 @@
 // Optional attribute:
 //   direction="column"  -> stack the buttons vertically instead of in a row
 
+// TEMPORARY: set to true to keep the info panel always open (for styling).
+// Set back to false (or delete it and its two uses) when done.
+const ALWAYS_SHOW_PANEL = true;
+
 const SKIN_CONCERNS = [
   { label: "Redness",        icon: "fa-fire",          id: "redness" },
   { label: "Acne",           icon: "fa-circle-dot",    id: "acne" },
@@ -101,6 +105,16 @@ class SkinConcernsList extends HTMLElement {
           gap: var(--space-md);
           width: 140px; 
         }
+        
+        /* label */
+        skin-concerns-list .label {
+          font-family: var(--font-base);
+          font-size: var(--font-size-xl);
+          line-height: 1.2;
+          font-weight: 700;
+          color: var(--color-text);
+          text-align: center;
+        }
 
         /* button */
         skin-concerns-list .concern {
@@ -108,7 +122,7 @@ class SkinConcernsList extends HTMLElement {
           height: 140px;
           padding: 0;
           background-color: var(--color-accent);
-          border: 4px solid var(--color-border-dark);
+          border: 5px solid var(--color-border-dark);
           border-radius: var(--radius-xl);
           cursor: pointer;
         }
@@ -153,12 +167,7 @@ class SkinConcernsList extends HTMLElement {
           display: none;
         }
 
-        /* arrow: a 36x18 box clipped into a down-pointing triangle, filled
-           with the page background. background-attachment: fixed lines the
-           gradient up with the window, so the arrow shows exactly the slice
-           of background behind it instead of its own tiny gradient.
-           Note: no transform here. A transform makes the browser ignore
-           "fixed", so the arrow is centered with calc() instead. */
+        /* arrow that points to the button */
         skin-concerns-list .concern-panel::before {
           content: "";
           position: absolute;
@@ -171,9 +180,11 @@ class SkinConcernsList extends HTMLElement {
           background-attachment: fixed;
         }
 
-        skin-concerns-list .panel-left,
+        skin-concerns-list .panel-left {
+          padding: var(--space-xl) var(--space-xl);
+        }
         skin-concerns-list .panel-right {
-          padding: var(--space-lg) var(--space-xl);
+          padding: var(--space-xl) var(--space-lg);
         }
 
         skin-concerns-list .panel-left {
@@ -183,7 +194,7 @@ class SkinConcernsList extends HTMLElement {
         skin-concerns-list .panel-right {
           display: flex;
           flex-direction: column; 
-          gap: var(--space-lg);
+          gap: var(--space-xl);
           background-color: var(--color-surface); 
         }
 
@@ -192,13 +203,11 @@ class SkinConcernsList extends HTMLElement {
           flex: 1;
         }
 
-
         skin-concerns-list .explore-btn {
           display: flex;
           align-items: center;
-          gap: var(--space-lg);
-          align-self: flex-start; /* don't stretch across the full column */
-          width: min-content; /* shrink to the narrowest fit: icon + longest word, so the text wraps */
+          gap: var(--space-md);
+          align-self: flex-end; 
           padding: var(--space-sm) var(--space-md);
           border-radius: var(--radius-md);
           color: var(--color-border-dark);
@@ -213,19 +222,21 @@ class SkinConcernsList extends HTMLElement {
 
         skin-concerns-list .explore-btn span {
           font-size: var(--font-size-lg);
-          line-height: 1.2; /* keeps the two wrapped lines snug */
         }
 
         skin-concerns-list .explore-btn:hover,
         skin-concerns-list .explore-btn:focus-visible {
-          background-color: var(--color-surface-alt);
+          background-color: var(--color-bg);
         }
 
+        /* concern title */ 
         skin-concerns-list .concern-panel h2 {
           margin: 0 0 var(--space-sm);
-          font-size: var(--font-size-xl);
+          font-size: var(--font-size-2xl);
+          font-weight: 600;
         }
 
+        /* Common causes text */
         skin-concerns-list .concern-panel h3 {
           margin: var(--space-lg) 0 var(--space-xs);
           font-size: var(--font-size-lg);
@@ -244,9 +255,9 @@ class SkinConcernsList extends HTMLElement {
           padding-left: var(--space-lg);
         }
 
-        skin-concerns-list .go-for     { color: var(--color-text-green); } /* #509C8E */
-        skin-concerns-list .these-help { color: var(--color-text-blue); }  /* #356B89 */
-        skin-concerns-list .avoid      { color: var(--color-text-red); }   /* #C65F5E */
+        skin-concerns-list .go-for     { color: var(--color-function-green); } /* #509C8E */
+        skin-concerns-list .these-help { color: var(--color-function-blue); }  /* #356B89 */
+        skin-concerns-list .avoid      { color: var(--color-function-red); }   /* #C65F5E */
 
         /* Gray italic text for anything that doesn't have real data yet */
         skin-concerns-list .placeholder {
@@ -261,16 +272,16 @@ class SkinConcernsList extends HTMLElement {
             margin: 0 var(--space-md) var(--space-xl);
           }
         }
-
-        skin-concerns-list .label {
-          font-family: var(--font-base);
-          font-size: var(--font-size-lg);
-          font-weight: 700;
-          color: var(--color-text);
-          text-align: center;
-        }
+          
       `;
       document.head.appendChild(style);
+    }
+
+    // TEMPORARY: open the first concern's panel on page load (see ALWAYS_SHOW_PANEL).
+    if (ALWAYS_SHOW_PANEL) {
+      const first = this.querySelector("button.concern");
+      this.setActive(first);
+      this.showPanel(SKIN_CONCERNS[0], getConcernData(SKIN_CONCERNS[0].id));
     }
   }
 
@@ -325,8 +336,9 @@ class SkinConcernsList extends HTMLElement {
         <!-- A link (not a <button>) because it goes to another page.
              ?concern= lets catalog.html know which concern was picked. -->
         <a class="explore-btn" href="catalog.html?concern=${encodeURIComponent(concern.id)}">
-          <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           <span>Explore functions</span>
+          <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          
         </a>
       </div>
     `;
@@ -339,6 +351,7 @@ class SkinConcernsList extends HTMLElement {
 
   // Hides the panel and puts focus back on the button that opened it.
   closePanel() {
+    if (ALWAYS_SHOW_PANEL) return; // TEMPORARY: panel can't be closed while styling
     const active = this.querySelector("button.concern.is-active");
     this.setActive(null);
     this.panel.hidden = true;
