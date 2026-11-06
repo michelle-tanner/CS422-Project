@@ -23,7 +23,7 @@
       color="var(--color-function-green)"
       function-label="Hydrating"
       description="The official definition from CosIng is that ingredients that help 'lightening discomfort of the skin'. Nice anti-inflammatory and ani-irritant ingredients belong to this category that reduce inflammation and soothe the skin. They are helpful in general to slow the aging process of the skin and they are super helpful for several common skin diseases like acne, rosacea or sensitive skin."
-      ingredients='{"Glycerin": "Pulls water into the skin", "Hyaluronic acid": "Holds onto moisture", "Squalane": "Locks moisture in"}'
+      ingredients='["Glycerin", "Hyaluronic acid", "Squalane", "Niacinamide", "Panthenol", "Allantoin", "Centella asiatica", "Ceramide NP", "Aloe vera", "Bisabolol", "Madecassoside", "Beta-glucan", "Oat extract", "Green tea extract", "Licorice root extract", "Urea", "Sodium PCA", "Betaine"]'
     ></function-dropdown>
 
     <!-- No attributes: shows the placeholder text -->
@@ -39,5 +39,12 @@
   /* Since index.css gives <main> padding, remove it for this page so content fills edge-to-edge */
   main {
     max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  function-dropdown {
+    width: 100%;
   }
 </style>

@@ -25,6 +25,16 @@ class MyDropdown extends HTMLElement {
   connectedCallback() {
     this.render();
     this.addEventListener("click", (event) => {
+      // "more ingredients" button: show/hide the rest of the pills
+      const more = event.target.closest(".more-ingredients");
+      if (more) {
+        const list = this.querySelector(".ingredients");
+        const isExpanded = list.classList.toggle("is-expanded");
+        more.setAttribute("aria-expanded", String(isExpanded));
+        more.querySelector(".more-text").textContent = isExpanded ? "fewer ingredients" : "more ingredients";
+        return;
+      }
+
       const toggle = event.target.closest(".dropdown-toggle");
       if (!toggle) return;
       if (ALWAYS_OPEN_DROPDOWN) return; // TEMPORARY: can't close while testing
@@ -68,7 +78,13 @@ class MyDropdown extends HTMLElement {
                  ${ingredients
                    .map(([name]) => `<ingredient-pill label="${escapeText(name)}"></ingredient-pill>`) // one pill per ingredient (needs pill.js)
                    .join("")}
-               </div>`
+               </div>
+
+               <!-- Only shows when the pills don't fit on one line (see watchIngredients) -->
+               <button type="button" class="more-ingredients" aria-expanded="false" hidden>
+                 <span class="more-text">more ingredients</span>
+                 <span class="arrow" aria-hidden="true"></span>
+               </button>`
             : `<p class="placeholder">Ingredients go here.</p>`}
         </div>
       </div>
@@ -82,6 +98,7 @@ class MyDropdown extends HTMLElement {
         /* Function button + dropdown */ 
         function-dropdown .dropdown {
           width: 75%;
+          margin-inline: auto; /* center the dropdown left-to-right */
         }
         
         /* Function button -- opens dropdown */
@@ -101,19 +118,17 @@ class MyDropdown extends HTMLElement {
           cursor: pointer;
         }
 
-        /* the label text: trim the font's built-in space above the capitals and below the baseline,
-           so the letters themselves sit in the middle (newer browsers; older ones just ignore it) */
         function-dropdown .dropdown-toggle span:not(.arrow) {
           text-box: trim-both cap alphabetic;
         }
 
-        function-dropdown .dropdown-toggle .arrow {
-          flex-shrink: 0; 
+        function-dropdown .arrow {
+          flex-shrink: 0;
           width: 1.3em;
           height: 0.8em;
-          clip-path: polygon(0 0, 100% 0, 50% 100%); 
-          background-color: currentColor; 
-          transition: transform 0.2s; 
+          clip-path: polygon(0 0, 100% 0, 50% 100%);
+          background-color: currentColor;
+          transition: transform 0.2s;
         }
 
         function-dropdown.is-open .dropdown-toggle {
@@ -156,8 +171,41 @@ class MyDropdown extends HTMLElement {
         /* row of ingredient pills */
         function-dropdown .ingredients {
           display: flex;
-          flex-wrap: wrap; 
+          flex-wrap: wrap;
           gap: var(--space-md);
+          padding-bottom: var(--space-lg); 
+          max-height: calc(27px + var(--space-sm));
+          overflow: hidden;
+        }
+
+        function-dropdown .ingredients.is-expanded {
+          max-height: none; /* show every line */
+        }
+
+        /* "more ingredients" button */
+        function-dropdown .more-ingredients {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-sm);
+          margin: 0;
+          padding: 0;
+          border: none;
+          background: none;
+          color: var(--color-text-muted);
+          font-family: var(--font-base);
+          font-size: var(--font-size-sm);
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        /* display: inline-flex above would otherwise override the hidden attribute */
+        function-dropdown .more-ingredients[hidden] {
+          display: none;
+        }
+
+        /* arrow flips up when the extra ingredients are showing */
+        function-dropdown .more-ingredients[aria-expanded="true"] .arrow {
+          transform: rotate(180deg);
         }
 
         function-dropdown .placeholder {
@@ -166,6 +214,22 @@ class MyDropdown extends HTMLElement {
         }
       </style>
     `;
+
+    this.watchIngredients();
+  }
+
+  watchIngredients() {
+    if (this.ingredientsObserver) this.ingredientsObserver.disconnect(); // stop watching the old row (render replaced it)
+
+    const list = this.querySelector(".ingredients");
+    const more = this.querySelector(".more-ingredients");
+    if (!list || !more) return;
+
+    this.ingredientsObserver = new ResizeObserver(() => {
+      if (list.classList.contains("is-expanded")) return; // already showing everything, keep the button
+      more.hidden = list.scrollHeight <= list.clientHeight; // hidden pills exist only if the content is taller than the box
+    });
+    this.ingredientsObserver.observe(list);
   }
 }
 
