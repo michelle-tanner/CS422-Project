@@ -8,7 +8,7 @@ class MyFooter extends HTMLElement {
       <nav>
         <ul class="links">
           <li><a href="home.html">Home</a></li>
-          <li><a href="ingredient.html">Functions</a></li>
+          <li><a href="functions.html">Functions</a></li>
           <li><a href="catalog.html">Catalog</a></li>
           <li><a href="product.html">Product</a></li>
         </ul>

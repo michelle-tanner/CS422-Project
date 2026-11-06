@@ -56,6 +56,9 @@
   --radius-2xl: 48px;
   --radius-pill: 999px;
 
+  /* ---- Panel Gap ---- */
+  --panel-gap: 40px;
+
   /* ---- Shadow ---- */
   --shadow-sm: 0 1px 2px rgba(44, 39, 34, 0.06);
   --shadow-md: 0 8px 24px rgba(44, 39, 34, 0.05);
@@ -177,6 +180,10 @@ body.main-scroll main {
   padding-inline: max(var(--space-md), calc((100% - var(--max-width)) / 2 + var(--space-md)));
 
   scrollbar-width: none; /* hide scrollbar */
+
+  /* Lets things inside <main> size themselves to its height using cqh units
+     (100cqh = the height of <main>). Safe here because <main>'s height comes from the window, not its content. */
+  container-type: size;
 }
 
 body.main-scroll main::-webkit-scrollbar {

@@ -8,8 +8,8 @@
 // Optional attribute:
 //   direction="column"  -> stack the buttons vertically instead of in a row
 
-// TEMPORARY: set to true to keep the info panel always open (for styling).
-// Set back to false (or delete it and its two uses) when done.
+// TEMPORARY: set to true to open the first concern's info panel when the page loads (for styling).
+// It can still be closed normally. Set back to false (or delete it and its use) when done.
 const ALWAYS_SHOW_PANEL = true;
 
 const SKIN_CONCERNS = [
@@ -51,6 +51,12 @@ class SkinConcernsList extends HTMLElement {
 
     // Read data-id for button clicked, find the concern in SKIN_CONCERNS, and show its info in the panel.
     this.addEventListener("click", (event) => {
+      // X button in the panel's top-right corner closes the panel
+      if (event.target.closest("button.close-panel")) {
+        this.closePanel();
+        return;
+      }
+
       const button = event.target.closest("button.concern");
       if (!button) return;
       // close already open panel 
@@ -156,7 +162,11 @@ class SkinConcernsList extends HTMLElement {
           position: relative; /* so the arrow below is placed relative to the panel */
           display: grid;
           grid-template-columns: 65fr 35fr; /* left side 65% | right side 35% */
-          margin: 0 40px 40px;
+          margin: 40px 0 var(--panel-gap);
+          /* Minimum height so the panel can be scrolled to the center of <main>.
+             100cqh = the height of <main> (it's a size container, see index.css).
+             Taking away the gap twice leaves the same space above and below the panel. */
+          min-height: calc(100cqh - 2 * var(--panel-gap));
           overflow: hidden;
           font-family: var(--font-base);
           color: var(--color-text);
@@ -259,6 +269,30 @@ class SkinConcernsList extends HTMLElement {
         skin-concerns-list .these-help { color: var(--color-function-blue); }  /* #356B89 */
         skin-concerns-list .avoid      { color: var(--color-function-red); }   /* #C65F5E */
 
+        /* X (close) button, pinned to the panel's top-right corner */
+        skin-concerns-list .close-panel {
+          position: absolute; /* placed relative to the panel (it's position: relative) */
+          top: var(--space-sm);
+          right: var(--space-sm);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          padding: 0;
+          border: none;
+          border-radius: var(--radius-md);
+          background: transparent;
+          color: var(--color-border-dark);
+          font-size: var(--font-size-xl);
+          cursor: pointer;
+        }
+
+        skin-concerns-list .close-panel:hover,
+        skin-concerns-list .close-panel:focus-visible {
+          background-color: var(--color-bg);
+        }
+
         /* Gray italic text for anything that doesn't have real data yet */
         skin-concerns-list .placeholder {
           color: var(--color-text-muted);
@@ -269,7 +303,8 @@ class SkinConcernsList extends HTMLElement {
         @media (max-width: 700px) {
           skin-concerns-list .concern-panel {
             grid-template-columns: 1fr;
-            margin: 0 var(--space-md) var(--space-xl);
+            --panel-gap: var(--space-xl);
+            margin: 0 var(--space-md) var(--panel-gap);
           }
         }
           
@@ -309,6 +344,10 @@ class SkinConcernsList extends HTMLElement {
 
     this.panel.setAttribute("aria-label", `${concern.label} information`);
     this.panel.innerHTML = `
+      <button type="button" class="close-panel" aria-label="Close ${escapeHtml(concern.label)} information">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+
       <div class="panel-left">
         <h2>${escapeHtml(concern.label)}</h2>
         ${renderText(d.description, `Description of ${concern.label.toLowerCase()} goes here.`)}
@@ -334,8 +373,8 @@ class SkinConcernsList extends HTMLElement {
         </div>
 
         <!-- A link (not a <button>) because it goes to another page.
-             ?concern= lets catalog.html know which concern was picked. -->
-        <a class="explore-btn" href="catalog.html?concern=${encodeURIComponent(concern.id)}">
+             ?concern= lets functions.html know which concern was picked. -->
+        <a class="explore-btn" href="functions.html?concern=${encodeURIComponent(concern.id)}">
           <span>Explore functions</span>
           <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           
@@ -346,12 +385,11 @@ class SkinConcernsList extends HTMLElement {
     this.panel.hidden = false;
     this.positionArrow();
     window.addEventListener("resize", this.positionArrow);
-    this.panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    this.panel.scrollIntoView({ behavior: "smooth", block: "center" }); // scroll so the panel is in the middle of <main>
   }
 
   // Hides the panel and puts focus back on the button that opened it.
   closePanel() {
-    if (ALWAYS_SHOW_PANEL) return; // TEMPORARY: panel can't be closed while styling
     const active = this.querySelector("button.concern.is-active");
     this.setActive(null);
     this.panel.hidden = true;
