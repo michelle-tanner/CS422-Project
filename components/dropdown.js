@@ -11,6 +11,10 @@
 //
 // These attributes are filled in from the data we retrieve.
 
+// TEMPORARY: set to true to keep every dropdown open (for testing/styling).
+// Set back to false (or delete it and its two uses) when done.
+const ALWAYS_OPEN_DROPDOWN = true;
+
 class MyDropdown extends HTMLElement {
   // The attributes this element uses (the dynamic data)
   static get observedAttributes() {
@@ -23,6 +27,7 @@ class MyDropdown extends HTMLElement {
     this.addEventListener("click", (event) => {
       const toggle = event.target.closest(".dropdown-toggle");
       if (!toggle) return;
+      if (ALWAYS_OPEN_DROPDOWN) return; // TEMPORARY: can't close while testing
 
       const content = this.querySelector(".dropdown-content");
       const isOpen = !content.hidden;
@@ -42,6 +47,7 @@ class MyDropdown extends HTMLElement {
     const label = this.getAttribute("function-label") || "Function name";
     const description = this.getAttribute("description") || "Function description goes here.";
     const ingredients = parseIngredients(this.getAttribute("ingredients"));
+    if (ALWAYS_OPEN_DROPDOWN) this.classList.add("is-open"); // TEMPORARY: start open while testing
     const isOpen = this.classList.contains("is-open"); // keep it open if it was open
 
     this.style.setProperty("--dropdown-color", color);
@@ -101,19 +107,17 @@ class MyDropdown extends HTMLElement {
           text-box: trim-both cap alphabetic;
         }
 
-        /* arrow: a box clipped into a down-pointing triangle with sharp corners.
-           Sized in em, so it scales with the label's font size. */
         function-dropdown .dropdown-toggle .arrow {
-          flex-shrink: 0; /* don't get squished by a long label */
+          flex-shrink: 0; 
           width: 1.3em;
           height: 0.8em;
-          clip-path: polygon(0 0, 100% 0, 50% 100%); /* top-left, top-right, bottom-middle */
-          background-color: currentColor; /* same color as the label text */
-          transition: transform 0.2s; /* arrow flips when opened */
+          clip-path: polygon(0 0, 100% 0, 50% 100%); 
+          background-color: currentColor; 
+          transition: transform 0.2s; 
         }
 
         function-dropdown.is-open .dropdown-toggle {
-          border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* flat bottom so it joins the opened area */
+          border-radius: var(--radius-lg) var(--radius-lg) 0 0; 
         }
 
         function-dropdown.is-open .dropdown-toggle .arrow {
@@ -125,7 +129,7 @@ class MyDropdown extends HTMLElement {
           padding: 25px 50px; 
           border: 2px solid var(--dropdown-color);
           border-top: none;
-          border-radius: 0 0 var(--radius-md) var(--radius-md); /* bottom corners md */
+          border-radius: 0 0 var(--radius-md) var(--radius-md);
           background-color: var(--color-bg);
         }
 
@@ -133,18 +137,18 @@ class MyDropdown extends HTMLElement {
           display: none;
         }
 
-        function-dropdown .dropdown-content p {
-          margin: 0 0 var(--space-sm);
-        }
-
-        /* space between the description and "Common Ingredients" */
         function-dropdown .description {
-          padding-bottom: 20px;
+            font-size: var(--font-size-lg);
         }
 
-        /* "Common Ingredients" text above the pills */
+        /* space between description and "Common Ingredients" */ 
+        function-dropdown .dropdown-content p {
+            margin: 0 0 var(--space-lg);
+        }
+
+        /* "Common Ingredients" */
         function-dropdown .ingredients-heading {
-          margin: var(--space-md) 0 var(--space-sm);
+          margin: 0 0 var(--space-sm);
           font-size: var(--font-size-2xl);
           color: var(--color-text-muted);
         }
@@ -152,8 +156,8 @@ class MyDropdown extends HTMLElement {
         /* row of ingredient pills */
         function-dropdown .ingredients {
           display: flex;
-          flex-wrap: wrap; /* pills move to the next line when they run out of room */
-          gap: var(--space-sm);
+          flex-wrap: wrap; 
+          gap: var(--space-md);
         }
 
         function-dropdown .placeholder {

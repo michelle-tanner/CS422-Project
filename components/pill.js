@@ -23,14 +23,17 @@ class IngredientPill extends HTMLElement {
         ingredient-pill {
           display: inline-flex;
           align-items: center;
-          padding: var(--space-xs) var(--space-md);
-          border-radius: var(--radius-pill); /* fully rounded ends */
-          background-color: var(--color-accent-pill); /* every pill is the same color */
+          padding: var(--space-sm) var(--space-lg);
+          border-radius: var(--radius-pill); 
+          background-color: var(--color-accent-pill);
+          box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.10); /* inner shadow: no offset, 4px blur, 25% black */
           color: var(--color-text);
           font-family: var(--font-base);
-          font-size: var(--font-size-sm);
+          font-size: var(--font-size-base);
           font-weight: 600;
-          white-space: nowrap; /* keep the name on one line */
+          line-height: 1; /* no extra space above/below the text (body's 1.6 line-height added some) */
+          margin: 0;
+          white-space: nowrap;
         }
       `;
       document.head.appendChild(style);
