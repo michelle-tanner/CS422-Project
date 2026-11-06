@@ -11,21 +11,15 @@
 //
 // These attributes are filled in from the data we retrieve.
 
-// TEMPORARY: set to true to keep every dropdown open (for testing/styling).
-// Set back to false (or delete it and its two uses) when done.
-const ALWAYS_OPEN_DROPDOWN = true;
-
 class MyDropdown extends HTMLElement {
-  // The attributes this element uses (the dynamic data)
   static get observedAttributes() {
     return ["color", "function-label", "description", "ingredients"];
   }
 
-//   Open and Closing the dropdown
+    // Open and Closing the dropdown
   connectedCallback() {
     this.render();
     this.addEventListener("click", (event) => {
-      // "more ingredients" button: show/hide the rest of the pills
       const more = event.target.closest(".more-ingredients");
       if (more) {
         const list = this.querySelector(".ingredients");
@@ -37,7 +31,6 @@ class MyDropdown extends HTMLElement {
 
       const toggle = event.target.closest(".dropdown-toggle");
       if (!toggle) return;
-      if (ALWAYS_OPEN_DROPDOWN) return; // TEMPORARY: can't close while testing
 
       const content = this.querySelector(".dropdown-content");
       const isOpen = !content.hidden;
@@ -57,7 +50,6 @@ class MyDropdown extends HTMLElement {
     const label = this.getAttribute("function-label") || "Function name";
     const description = this.getAttribute("description") || "Function description goes here.";
     const ingredients = parseIngredients(this.getAttribute("ingredients"));
-    if (ALWAYS_OPEN_DROPDOWN) this.classList.add("is-open"); // TEMPORARY: start open while testing
     const isOpen = this.classList.contains("is-open"); // keep it open if it was open
 
     this.style.setProperty("--dropdown-color", color);
@@ -70,6 +62,7 @@ class MyDropdown extends HTMLElement {
         </button>
 
         <div class="dropdown-content" ${isOpen ? "" : "hidden"}>
+          <div class="dropdown-main">
           <p class="description">${escapeText(description)}</p>
 
           <h3 class="ingredients-heading">Common Ingredients</h3>
@@ -86,6 +79,12 @@ class MyDropdown extends HTMLElement {
                  <span class="arrow" aria-hidden="true"></span>
                </button>`
             : `<p class="placeholder">Ingredients go here.</p>`}
+          </div>
+
+          <a class="explore-btn" href="catalog.html?function=${encodeURIComponent(label)}">
+            <span>Explore products</span>
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          </a>
         </div>
       </div>
 
@@ -146,6 +145,40 @@ class MyDropdown extends HTMLElement {
           border-top: none;
           border-radius: 0 0 var(--radius-md) var(--radius-md);
           background-color: var(--color-bg);
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* "Explore products" button */ 
+        function-dropdown .dropdown-main {
+          flex: 1;
+        }
+
+        /* Explore button: same as the one in the home page's info panel */
+        function-dropdown .explore-btn {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+          align-self: flex-end; /* right side */
+          padding: var(--space-sm) var(--space-md);
+          border-radius: var(--radius-md);
+          color: var(--color-border-dark);
+          font-size: var(--font-size-xl);
+          font-weight: 700;
+          text-decoration: none; 
+        }
+
+        function-dropdown .explore-btn i {
+          font-size: var(--font-size-2xl);
+        }
+
+        function-dropdown .explore-btn span {
+          font-size: var(--font-size-lg);
+        }
+
+        function-dropdown .explore-btn:hover,
+        function-dropdown .explore-btn:focus-visible {
+          background-color: var(--color-surface);
         }
 
         function-dropdown .dropdown-content[hidden] {
@@ -198,12 +231,10 @@ class MyDropdown extends HTMLElement {
           cursor: pointer;
         }
 
-        /* display: inline-flex above would otherwise override the hidden attribute */
         function-dropdown .more-ingredients[hidden] {
           display: none;
         }
 
-        /* arrow flips up when the extra ingredients are showing */
         function-dropdown .more-ingredients[aria-expanded="true"] .arrow {
           transform: rotate(180deg);
         }
