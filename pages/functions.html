@@ -8,6 +8,7 @@
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
   <script src="../components/dropdown.js" defer></script>
+  <script src="../data/ingredient-lists.js" defer></script> 
   <script src="../components/pill.js" defer></script>
 </head>
 <body>
@@ -18,25 +19,42 @@
     <h1>Functions page placeholder</h1>
     <toggle-button>
     </toggle-button>
-    <!-- Sample data for now; later these attributes get filled in from the retrieved data -->
-    <function-dropdown
-      color="var(--color-function-green)"
-      function-label="Hydrating"
-      description="The official definition from CosIng is that ingredients that help 'lightening discomfort of the skin'. Nice anti-inflammatory and ani-irritant ingredients belong to this category that reduce inflammation and soothe the skin. They are helpful in general to slow the aging process of the skin and they are super helpful for several common skin diseases like acne, rosacea or sensitive skin."
-      ingredients='["Glycerin", "Hyaluronic acid", "Squalane", "Niacinamide", "Panthenol", "Allantoin", "Centella asiatica", "Ceramide NP", "Aloe vera", "Bisabolol", "Madecassoside", "Beta-glucan", "Oat extract", "Green tea extract", "Licorice root extract", "Urea", "Sodium PCA", "Betaine"]'
-    ></function-dropdown>
-
-    <!-- No attributes: shows the placeholder text -->
-    <function-dropdown></function-dropdown>
+    <!-- One <function-dropdown> per function gets added here by renderFunctions() below -->
+    <div class="function-list"></div>
   </main>
 
   <my-footer></my-footer>
+
+  <!-- MOCK DATA: defines FUNCTIONS. Remove this line once the real data is loaded. -->
+  <script src="../data/mock-data.js"></script>
+
+  <script>
+    // Builds one <function-dropdown> for each function in the list and adds it to the page.
+    // Each function looks like: { label, color, description, ingredients: ["...", "..."] }
+    function renderFunctions(functions) {
+      const list = document.querySelector(".function-list");
+      list.innerHTML = ""; // clear anything already there
+
+      functions.forEach((fn) => {
+        const dropdown = document.createElement("function-dropdown");
+        // setAttribute is safe: the text is never read as HTML
+        dropdown.setAttribute("function-label", fn.label);
+        dropdown.setAttribute("color", fn.color);
+        dropdown.setAttribute("description", fn.description);
+        dropdown.setAttribute("ingredients", JSON.stringify(fn.ingredients)); // attributes only hold text, so turn the list into JSON
+        list.appendChild(dropdown);
+      });
+    }
+
+    // Uses the mock FUNCTIONS for now. With real data, call this with that data instead, e.g.:
+    //   fetch("<api url>").then((res) => res.json()).then(renderFunctions);
+    renderFunctions(FUNCTIONS);
+  </script>
 
 </body>
 </html>
 
 <style>
-  /* Since index.css gives <main> padding, remove it for this page so content fills edge-to-edge */
   main {
     max-width: none;
     display: flex;
@@ -44,7 +62,7 @@
     align-items: center;
   }
 
-  function-dropdown {
+  .function-list {
     width: 100%;
   }
 </style>

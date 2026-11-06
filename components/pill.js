@@ -2,7 +2,6 @@
 // Usage:
 //   <ingredient-pill
 //     label=""     -> the ingredient's name, shown in the pill
-//     status=""    -> (optional) the checkbox's starting choice: "" (empty) | "check" | "x"
 //   ></ingredient-pill>
 //
 // These attributes are filled in from the data we retrieve.
@@ -16,11 +15,28 @@ class IngredientPill extends HTMLElement {
 
   connectedCallback() {
     this.render();
+
+    // When any choice changes (this pill, another pill, or another tab),
+    // update this pill if it's the same ingredient.
+    this.onListsChange = (event) => {
+      const { name } = event.detail;
+      const label = this.getAttribute("label") || "";
+      if (!name || name.trim().toLowerCase() === label.trim().toLowerCase()) {
+        this.showStatus(IngredientLists.getStatus(label));
+      }
+    };
+    window.addEventListener("ingredient-lists-change", this.onListsChange);
+
+    if (this.hasClickListener) return;
+    this.hasClickListener = true;
+
     this.addEventListener("click", (event) => {
+      // circle: move to the next choice and save it to the shared lists
       if (event.target.closest(".pill-check")) {
-        const current = this.getAttribute("status") || "";
+        const label = this.getAttribute("label") || "";
+        const current = IngredientLists.getStatus(label);
         const next = PILL_STATUSES[(PILL_STATUSES.indexOf(current) + 1) % PILL_STATUSES.length];
-        this.setStatus(next);
+        IngredientLists.setStatus(label, next); // the change event then updates every matching pill
         return;
       }
 
@@ -102,6 +118,10 @@ class IngredientPill extends HTMLElement {
     }
   }
 
+  disconnectedCallback() {
+    window.removeEventListener("ingredient-lists-change", this.onListsChange);
+  }
+
   attributeChangedCallback() {
     if (this.isConnected) this.render();
   }
@@ -117,11 +137,12 @@ class IngredientPill extends HTMLElement {
       <button type="button" class="pill-check"></button>
     `;
 
-    this.setStatus(this.getAttribute("status") || "", { silent: true });
+    this.showStatus(IngredientLists.getStatus(label));
   }
 
-  // Updates the icon
-  setStatus(status, { silent = false } = {}) {
+  // Shows a choice ("", "check", or "x") in the circle. Only changes how the pill looks;
+  // saving the choice is done by IngredientLists.setStatus.
+  showStatus(status) {
     const label = this.getAttribute("label") || "Ingredient";
     const box = this.querySelector(".pill-check");
 
@@ -133,14 +154,8 @@ class IngredientPill extends HTMLElement {
       status === "x"     ? `<i class="fa-solid fa-xmark" aria-hidden="true"></i>` :
       "";
 
-    const stateText = status === "check" ? "checked" : status === "x" ? "marked with an x" : "not set";
+    const stateText = status === "check" ? "included" : status === "x" ? "excluded" : "not in a list";
     box.setAttribute("aria-label", `${label}: ${stateText}. Click to change.`);
-
-    if (!silent) {
-      this.dispatchEvent(
-        new CustomEvent("pill-status-change", { detail: { label, status }, bubbles: true })
-      );
-    }
   }
 }
 

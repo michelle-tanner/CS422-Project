@@ -5,11 +5,12 @@
 //     color=""            -> the function's color (e.g. var(--color-function-green))
 //     function-label=""   -> the function's name, shown on the dropdown
 //     description=""      -> what the function does, shown when opened
-//     ingredients='{}'    -> the function's ingredients, as JSON (shown when opened)
-//                            e.g. '{"Glycerin": "Pulls water into the skin", "Squalane": "Locks moisture in"}'
+//     ingredients='[]'    -> the function's ingredients, as a JSON list (shown when opened)
+//                            e.g. '["Glycerin", "Squalane"]'
 //   ></function-dropdown>
 //
-// These attributes are filled in from the data we retrieve.
+// These attributes are filled in from the data we retrieve
+// (see renderFunctions() in pages/functions.html and the FUNCTIONS list in data/mock-data.js).
 
 class MyDropdown extends HTMLElement {
   static get observedAttributes() {
