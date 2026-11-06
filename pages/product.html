@@ -79,14 +79,15 @@
     /* TOP: image + TEXT side by side */
     .top {
       display: flex;
-      gap: var(--space-2xl);
+      gap: var(--space-3xl);
     }
 
     .product-image {
-      width: 300px;
-      height: 300px;
+      width: 450px;
+      height: 450px;
       flex-shrink: 0; /* don't let the text squeeze it */
       background-color: var(--color-surface);
+      border: 1px solid var(--color-border-dark);
     }
 
     /* TEXT: brand, product, country, type, description stacked */

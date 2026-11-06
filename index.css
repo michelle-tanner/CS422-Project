@@ -16,25 +16,28 @@
   --pill-bad: #E45456;
 
   /* ---- Background Colors ---- */
-  --color-bg: #F4EEEC;;
+  --color-bg: #F4EEEC;
   --color-surface: #ffffff;
-  --color-surface-alt: #F4EEEC;;
+  --color-surface-alt: #BE9689;;
 
   /* ---- Text ---- */
-  --color-text: #2C2722;
+  --color-text: #44231C;
   --color-text-muted: #7C574F;
+  --color-text-light: #F4EEEC;
   --color-text-on-primary: #ffffff;
-  --color-text-green: #509C8E;
-  --color-text-blue: #356B89;
-  --color-text-red: #C65F5E;
+  --color-function-green: #509C8E;
+  --color-function-blue: #356B89;
+  --color-function-red: #C65F5E;
 
   /* ---- Borders ---- */
-  --color-border: #e5ddd2;
+  --color-border-light: #F4EEEC;
   --color-border-dark: #44231C;
 
   /* ---- Accents ---- */
   --color-accent: #E89E8C;
   --color-accent-muted: #F7D2C9;
+  --color-accent-pill: #D6F3FA;
+  --color-accent-checklist: #92BCAD;
 
   /* ---- Spacing scale ---- */
   --space-xs: 4px;
@@ -43,6 +46,7 @@
   --space-lg: 24px;
   --space-xl: 40px;
   --space-2xl: 64px;
+  --space-3xl: 96px;
 
   /* ---- Radius ---- */
   --radius-sm: 8px;
@@ -149,20 +153,20 @@ my-footer {
 .bubble-top {
   top: 0;             
   right: 0;
-  transform: translate(40%, -25%);
+  transform: translate(50%, -30%);
 }
 
 .bubble-bottom {
   bottom: 0;           
   left: 0;
-  transform: translate(-40%, 25%);
+  transform: translate(-45%, 45%);
 }
 
 /* ---- Pages where only <main> scrolls ----
   .main-scroll class on the <body> locks the page to the window height, so the header, footer, and bubbles don't move. 
   <main> is what holds the content and is what scrolls when the content is more than the height of the window. */
 body.main-scroll {
-  height: 100dvh; /* exactly the window height (body above only sets a minimum) */
+  height: 100dvh; 
 }
 
 body.main-scroll main {

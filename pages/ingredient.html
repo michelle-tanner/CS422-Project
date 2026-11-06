@@ -12,21 +12,19 @@
 
   <my-header></my-header>
 
-  <!-- Decorative bubble, top right, just under the header -->
-  <div class="bubble-anchor">
-    <img class="bubble bubble-top" src="../bubble1.png" alt="" />
-  </div>
-
   <main>
     <h1>Ingredient page placeholder</h1>
   </main>
-
-  <!-- Decorative bubble, bottom left, just above the footer -->
-  <div class="bubble-anchor">
-    <img class="bubble bubble-bottom" src="../bubble2.png" alt="" />
-  </div>
 
   <my-footer></my-footer>
 
 </body>
 </html>
+
+<style>
+  /* Since index.css gives <main> padding, remove it for this page so content fills edge-to-edge */
+  main {
+    max-width: none;
+    padding: 0;
+  }
+</style>

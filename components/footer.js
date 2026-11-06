@@ -8,9 +8,9 @@ class MyFooter extends HTMLElement {
       <nav>
         <ul class="links">
           <li><a href="home.html">Home</a></li>
+          <li><a href="ingredient.html">Functions</a></li>
           <li><a href="catalog.html">Catalog</a></li>
           <li><a href="product.html">Product</a></li>
-          <li><a href="ingredient.html">Ingredient</a></li>
         </ul>
       </nav>
       <p>this is a placeholder footer so you can switch pages easily. &copy; 2026 MySkindex</p>
@@ -23,7 +23,7 @@ class MyFooter extends HTMLElement {
           justify-content: center;
           gap: var(--space-sm);
           padding: var(--space-md) var(--space-xl);
-          background-color: var(--color-surface-alt);
+          background-color: var(--color-bg);
           box-shadow: var(--shadow-md);
         }
 
