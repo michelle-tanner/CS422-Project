@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="../index.css" />
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/dropdown.js" defer></script>
+  <script src="../components/pill.js" defer></script>
 </head>
 <body>
 
@@ -14,6 +16,18 @@
 
   <main>
     <h1>Functions page placeholder</h1>
+    <toggle-button>
+    </toggle-button>
+    <!-- Sample data for now; later these attributes get filled in from the retrieved data -->
+    <function-dropdown
+      color="var(--color-function-green)"
+      function-label="Hydrating"
+      description="The official definition from CosIng is that ingredients that help 'lightening discomfort of the skin'. Nice anti-inflammatory and ani-irritant ingredients belong to this category that reduce inflammation and soothe the skin. They are helpful in general to slow the aging process of the skin and they are super helpful for several common skin diseases like acne, rosacea or sensitive skin."
+      ingredients='{"Glycerin": "Pulls water into the skin", "Hyaluronic acid": "Holds onto moisture", "Squalane": "Locks moisture in"}'
+    ></function-dropdown>
+
+    <!-- No attributes: shows the placeholder text -->
+    <function-dropdown></function-dropdown>
   </main>
 
   <my-footer></my-footer>

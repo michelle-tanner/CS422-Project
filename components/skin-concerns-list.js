@@ -265,9 +265,9 @@ class SkinConcernsList extends HTMLElement {
           padding-left: var(--space-lg);
         }
 
-        skin-concerns-list .go-for     { color: var(--color-function-green); } /* #509C8E */
-        skin-concerns-list .these-help { color: var(--color-function-blue); }  /* #356B89 */
-        skin-concerns-list .avoid      { color: var(--color-function-red); }   /* #C65F5E */
+        skin-concerns-list .go-for     { color: var(--color-text-green); } /* #509C8E */
+        skin-concerns-list .these-help { color: var(--color-text-blue); }  /* #356B89 */
+        skin-concerns-list .avoid      { color: var(--color-text-red); }   /* #C65F5E */
 
         /* X (close) button, pinned to the panel's top-right corner */
         skin-concerns-list .close-panel {
