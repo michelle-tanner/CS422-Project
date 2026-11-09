@@ -324,6 +324,12 @@ class SkinConcernsList extends HTMLElement {
   //   thesehelp (array), avoid (array)
   // Anything missing shows placeholder text instead.
   showPanel(concern) {
+    // If the panel is still closing, stop that so it can open again
+    if (this.closingAnimation) {
+      this.closingAnimation.cancel();
+      this.closingAnimation = null;
+    }
+
     this.panel.setAttribute("aria-label", `${concern.label} information`);
     this.panel.innerHTML = `
       <button type="button" class="close-panel" aria-label="Close ${escapeHtml(concern.label)} information">
@@ -368,13 +374,36 @@ class SkinConcernsList extends HTMLElement {
     this.panel.scrollIntoView({ behavior: "smooth", block: "center" }); // scroll so the panel is in the middle of <main>
   }
 
-  // Hides the panel and puts focus back on the button that opened it.
+  // Shrinks and fades the panel out, then hides it and puts focus back on the button that opened it.
   closePanel() {
+    if (this.panel.hidden || this.closingAnimation) return;
+
     const active = this.querySelector("button.concern.is-active");
     this.setActive(null);
-    this.panel.hidden = true;
     window.removeEventListener("resize", this.positionArrow);
-    if (active) active.focus();
+    if (active) active.focus({ preventScroll: true }); // preventScroll: no jump while the panel shrinks
+
+    const hide = () => {
+      this.closingAnimation = null;
+      this.panel.hidden = true;
+    };
+
+    // Skip the animation for people who turned on "reduce motion" in their system settings
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      hide();
+      return;
+    }
+
+    // Shrinking the height (not just fading) lets the page slide back smoothly instead of jumping
+    const height = `${this.panel.offsetHeight}px`;
+    this.closingAnimation = this.panel.animate(
+      [
+        { height, minHeight: height, opacity: 1 },
+        { height: "0px", minHeight: "0px", opacity: 0 },
+      ],
+      { duration: 300, easing: "ease-in-out" }
+    );
+    this.closingAnimation.onfinish = hide;
   }
 
   // Moves the arrow so it sits under the center of the selected button.
