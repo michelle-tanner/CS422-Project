@@ -22,10 +22,10 @@ class IngredientPill extends HTMLElement {
       const { name } = event.detail;
       const label = this.getAttribute("label") || "";
       if (!name || name.trim().toLowerCase() === label.trim().toLowerCase()) {
-        this.showStatus(IngredientLists.getStatus(label));
+        this.showStatus(FilterLists.getStatus(label));
       }
     };
-    window.addEventListener("ingredient-lists-change", this.onListsChange);
+    window.addEventListener("filter-lists-change", this.onListsChange);
 
     if (this.hasClickListener) return;
     this.hasClickListener = true;
@@ -34,9 +34,9 @@ class IngredientPill extends HTMLElement {
       // circle: move to the next choice and save it to the shared lists
       if (event.target.closest(".pill-check")) {
         const label = this.getAttribute("label") || "";
-        const current = IngredientLists.getStatus(label);
+        const current = FilterLists.getStatus(label);
         const next = PILL_STATUSES[(PILL_STATUSES.indexOf(current) + 1) % PILL_STATUSES.length];
-        IngredientLists.setStatus(label, next); // the change event then updates every matching pill
+        FilterLists.setStatus(label, next); // the change event then updates every matching pill
         return;
       }
 
@@ -134,7 +134,7 @@ class IngredientPill extends HTMLElement {
   }
 
   disconnectedCallback() {
-    window.removeEventListener("ingredient-lists-change", this.onListsChange);
+    window.removeEventListener("filter-lists-change", this.onListsChange);
   }
 
   attributeChangedCallback() {
@@ -152,11 +152,11 @@ class IngredientPill extends HTMLElement {
       <button type="button" class="pill-check"></button>
     `;
 
-    this.showStatus(IngredientLists.getStatus(label));
+    this.showStatus(FilterLists.getStatus(label));
   }
 
   // Shows a choice ("", "check", or "x") in the circle. Only changes how the pill looks;
-  // saving the choice is done by IngredientLists.setStatus.
+  // saving the choice is done by FilterLists.setStatus.
   showStatus(status) {
     const label = this.getAttribute("label") || "Ingredient";
     const box = this.querySelector(".pill-check");

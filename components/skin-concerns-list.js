@@ -48,6 +48,12 @@ class SkinConcernsList extends HTMLElement {
         return;
       }
 
+      // "Explore functions" link: remember which concern was picked for the Functions page
+      if (event.target.closest(".explore-btn")) {
+        FilterLists.setSelectedConcern(this.querySelector("button.concern.is-active").dataset.id);
+        return;
+      }
+
       const button = event.target.closest("button.concern");
       if (!button) return;
       // close already open panel 
@@ -347,8 +353,8 @@ class SkinConcernsList extends HTMLElement {
         </div>
 
         <!-- A link (not a <button>) because it goes to another page.
-             ?concern= lets functions.html know which concern was picked. -->
-        <a class="explore-btn" href="functions.html?concern=${encodeURIComponent(concern.id)}">
+             Clicking it saves the concern with FilterLists (see the click listener above). -->
+        <a class="explore-btn" href="functions.html">
           <span>Explore functions</span>
           <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           

@@ -8,7 +8,7 @@
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
   <script src="../components/dropdown.js" defer></script>
-  <script src="../data/ingredient-lists.js" defer></script> 
+  <script src="../data/filter-lists.js" defer></script> 
   <script src="../components/pill.js" defer></script>
 </head>
 <body>
@@ -26,9 +26,6 @@
   </main>
 
   <my-footer></my-footer>
-
-  <!-- MOCK DATA: defines the starting include/exclude choices for the pills. -->
-  <script src="../data/mock-data.js"></script>
 
   <script>
     // Builds one <function-dropdown> for each function in the list and adds it to the page.
@@ -48,8 +45,15 @@
       });
     }
 
-    // Which functions in functions.json count as "active", and each one's color.
-    // Edit this list to regroup or recolor them. Anything not listed is "inactive" and shows in gray.
+    // Each group in concerns.json and the color its functions show in.
+    const CONCERN_GROUP_COLORS = {
+      gofor: "var(--color-function-green)",
+      thesehelp: "var(--color-function-blue)",
+      avoid: "var(--color-function-red)",
+    };
+
+    // Only used when no skin concern is selected: which functions count as "active", and their colors.
+    // Anything not listed is "inactive" and shows in gray.
     const ACTIVE_FUNCTION_COLORS = {
       // green: hydrates, calms, or protects
       "moisturizer/humectant": "var(--color-function-green)",
@@ -91,23 +95,46 @@
       if (button) showSide(button.dataset.side);
     });
 
-    // Load the real functions, sort them into the two groups, and show the active ones.
-    fetch("../data/functions.json")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Couldn't load functions.json (${res.status})`);
+    function loadJson(url) {
+      return fetch(url).then((res) => {
+        if (!res.ok) throw new Error(`Couldn't load ${url} (${res.status})`);
         return res.json();
-      })
-      .then((functions) => {
-        activeFunctions = functions
-          .filter((fn) => fn.label in ACTIVE_FUNCTION_COLORS)
-          .map((fn) => ({ ...fn, color: ACTIVE_FUNCTION_COLORS[fn.label] }));
-        inactiveFunctions = functions.filter((fn) => !(fn.label in ACTIVE_FUNCTION_COLORS));
-        showSide("main");
-      })
-      .catch((error) => {
-        console.error(error);
-        document.querySelector(".function-list").textContent = "Functions couldn't be loaded. Please try again.";
       });
+    }
+
+    // Active = the concern's Go For, These Help, and Avoid functions, in that order.
+    function getConcernFunctions(functions, concern) {
+      return Object.entries(CONCERN_GROUP_COLORS).flatMap(([group, color]) =>
+        functions
+          .filter((fn) => concern[group].includes(fn.label))
+          .map((fn) => ({ ...fn, color }))
+      );
+    }
+
+    function getDefaultFunctions(functions) {
+      return functions
+        .filter((fn) => fn.label in ACTIVE_FUNCTION_COLORS)
+        .map((fn) => ({ ...fn, color: ACTIVE_FUNCTION_COLORS[fn.label] }));
+    }
+
+    // Waits for DOMContentLoaded because FilterLists comes from a deferred script.
+    document.addEventListener("DOMContentLoaded", () => {
+      Promise.all([loadJson("../data/functions.json"), loadJson("../data/concerns.json")])
+        .then(([functions, { concerns }]) => {
+          const concern = concerns[FilterLists.getSelectedConcern()];
+          activeFunctions = concern ? getConcernFunctions(functions, concern) : getDefaultFunctions(functions);
+
+          // Inactive = everything in functions.json that isn't active.
+          const activeLabels = new Set(activeFunctions.map((fn) => fn.label));
+          inactiveFunctions = functions.filter((fn) => !activeLabels.has(fn.label));
+
+          showSide("main");
+        })
+        .catch((error) => {
+          console.error(error);
+          document.querySelector(".function-list").textContent = "Functions couldn't be loaded. Please try again.";
+        });
+    });
   </script>
 
 </body>
