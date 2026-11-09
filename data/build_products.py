@@ -6,9 +6,11 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 
-# SCRIPT for building products.JSON
-# Uses ingredients.JSON (and functions.JSON as a fallback) to add functions per product
-# **Dependencies are both ingredients.JSON(build_ingreds.py), and functions.JSON(build_funcs.py)
+# SCRIPT for building products.json
+# Uses ingredients.json (and functions.json as a fallback) to add functions per product
+# **Dependencies are both ingredients.json(build_ingreds.py), and functions.json(build_funcs.py)
+# Reads a spreadsheet of products (skincare_small.csv--about 125 products) and identifies each products functions from its ingredients; web scrapes each shop page for the picture and description of the product.
+# Saves NAME, URL, TYPE, INGREDS, PRICE, FUNCTIONS, IMAGE, and DESC to products.json  
 
 session = requests.Session()
 session.headers["User-Agent"] = "Mozilla/5.0 (CS422 class project)"
@@ -36,11 +38,11 @@ def scrape(url):
 #for looking up from functions to ingredients
 lookup = {}
 
-with open("ingredients.JSON", encoding="utf-8") as f:
+with open("ingredients.json", encoding="utf-8") as f:
     for row in json.load(f):
         lookup[norm(row["name"])] = row["function"]
 
-with open("functions.JSON", encoding="utf-8") as f:
+with open("functions.json", encoding="utf-8") as f:
     for fn in json.load(f):
         for ing in fn["ingredients"]:
             funcs = lookup.setdefault(norm(ing), [])
@@ -84,4 +86,4 @@ missing = sorted(i for i in all_ings if i not in lookup)
 print(f"{len(missing)} of {len(all_ings)} ingredients had no match:")
 print(missing)
 
-df.to_json("products.JSON", orient="records", indent=2, force_ascii=False)
+df.to_json("products.json", orient="records", indent=2, force_ascii=False)

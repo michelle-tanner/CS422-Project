@@ -6,8 +6,9 @@ from urllib.parse import urljoin
 from datasets import load_dataset
 import json
 
-#Script for building functions.JSON, 
-#Scrapes inkeedecoder for both functions/function descriptions and ingredients mapping to each function
+# Script for building functions.json, 
+# Scrapes inkeedecoder for both functions/function descriptions and ingredients mapping to each function
+# Saves each function to functions.json with LABEL, DESCRIPTION, and INGREDIENTS (a list of ingredients with that function)
 
 #for scraping incidecoder
 URL_BASE = "https://inkeedecoder.com"
@@ -65,5 +66,5 @@ fullList = build_funcs(URL_START)
 #unqiue_ingreds = sorted(unique_ingreds)
 #print(unique_ingreds)
 
-with open("functions.JSON", "w", encoding="utf-8") as f:
+with open("functions.json", "w", encoding="utf-8") as f:
   json.dump(fullList, f, indent=2, ensure_ascii=False)

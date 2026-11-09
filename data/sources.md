@@ -9,23 +9,23 @@
 
 ###Components of each JSON file
 
-####ingredients.JSON
+####ingredients.json
   - name: str
   - function: [] list of strs that an ingredient maps to from inkeedecoder
   - rating: str from {"Safe", "Moderate Risk"}
   - description: str
 
-####functions.JSON
+####functions.json
   - label : str, name of function
   - ingredients : [] list of strs of all ingredients for a certain function from inkeedecoder
   - description: str
 
-####products.JSON
+####products.json
   - name: str
   - url: str, http product page
   - type: str from {"Moisturizer", "Serum", "Oil", etc}
-  - ingreds: [] list of strs, all map to entries in ingredients.JSON
+  - ingreds: [] list of strs, all map to entries in ingredients.json
   - price: str in GBP ("£6.20")
-  - funcs: [] list of str, from functions.JSON
+  - functions: [] list of str, from functions.json
   - image: str, http link for loading in js
   - desc: str
