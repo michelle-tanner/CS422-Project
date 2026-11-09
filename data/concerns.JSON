@@ -28,7 +28,7 @@
     "antiAging": {
       "label": "Anti-aging",
       "icon": "fa-hourglass-half",
-      "description": "Anti-aging isn’t a problem in itself. It means caring for the signs of skin getting older, like fine lines, wrinkles, sagging, and loss of bounce. You might care about this if you notice lines around your eyes or mouth, or if your skin feels less firm than it used to.",
+      "description": "Anti-aging isn’t a problem in itself. It means caring for the signs of skin getting older, like fine-lines, wrinkles, sagging, and loss of bounce. You might care about this if you notice lines around your eyes or mouth, or if your skin feels less firm than it used to.",
       "gofor": ["Retinol", "Peptides", "Vitamin C", "Hyaluronic Acid", "Coenzyme Q10"],
       "avoid": ["Alcohol Denat", "Harsh physical scrubs", "Drying sulfates"],
       "causes": ["Natural aging: Your body makes less collagen, the protein that keeps skin firm and bouncy, as you get older", 
@@ -57,8 +57,8 @@
       "description": "Dark spots (also called hyperpigmentation) are flat patches that are darker than the rest of your skin. They happen when your skin makes too much melanin, the natural pigment that gives skin its color. You might have this concern if you see brown, tan, or dark marks that stay around, such as spots left behind after a pimple heals.",
       "gofor": ["Vitamin C", "Alpha Arbutin", "Kojic Acid", "Tranexamic Acid", "Licorice Root Extract"],
       "avoid": ["Unprotected UV exposure", "Harsh picking of blemishes"],
-      "causes": ["Sun damage: Years of sun exposure can create “sun spots” or “age spots.”", 
-      "Leftover acne marks: Pimples can leave dark marks after they heal.", 
+      "causes": ["Sun damage: Years of sun exposure can create “sun spots” or “age spots”", 
+      "Leftover acne marks: Pimples can leave dark marks after they heal", 
       "Hormones: Pregnancy or birth control can cause patches called melasma", 
       "Skin injuries: Cuts, burns, bug bites, or picking at skin can leave dark marks"],
       "thesehelp": ["Brightening serum", "Chemical peel", "Sunscreen", "Antioxidant"]
