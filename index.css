@@ -1,12 +1,7 @@
-/* Load the Font Awesome icon library once, so pages don't need their own <link>. */
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css");
 
-/* index.css
-   MySkindex global design tokens.
-   These are EXAMPLE values — swap them for the real brand colors/scale.
-   Everything else in the app should reference these variables instead of
-   hard-coding colors, spacing, radii, etc. directly. */
+/* MySkindex Global design tokens */
 
 :root {
   /* ---- Pill Colors ---- */
@@ -29,13 +24,13 @@
   --color-surface: #ffffff;
   --color-surface-alt: #BE9689;;
 
-  /* ---- Text ---- */
+  /* ---- Text Colors ---- */
   --color-text: #44231C;
   --color-text-muted: #7C574F;
   --color-text-light: #F4EEEC;
   --color-text-white: #ffffff;
 
-  /* ---- Borders ---- */
+  /* ---- Border colors ---- */
   --color-border-light: #F4EEEC;
   --color-border-dark: #44231C;
 
@@ -63,7 +58,7 @@
   --radius-pill: 999px;
 
   /* ---- Panel Gap ---- */
-  --panel-gap: 40px;
+  --panel-gap: 0px;
 
   /* ---- Shadow ---- */
   --shadow-sm: 0 1px 2px rgba(44, 39, 34, 0.06);
@@ -85,8 +80,7 @@
   --max-width: 1080px;
   --z-header: 9999;
 
-  /* ---- Page background ----
-     Radial glow: white in the middle fading out to --color-bg. */
+  /* ---- Page background (Radial: white --> creamy white) ---- */
   --page-bg: radial-gradient(circle at center, var(--color-surface) 0%, var(--color-bg) 70%);
 }
 
@@ -94,20 +88,10 @@
   box-sizing: border-box;
 }
 
-/* Hide scrollbar (MAY NOT NEED because we only scroll on <main> now--POSSIBLE DELETE) */
 html {
-  scrollbar-width: none; /* Firefox, Chrome, Edge */
-  overflow-x: clip; /* no sideways scrolling. Setting overflow here (not only on body)
-                       also stops body's overflow from being handed to the window,
-                       so body's "overflow: clip" below clips body itself. */
+  overflow-x:clip;
 }
 
-html::-webkit-scrollbar {
-  display: none; /* Safari and older Chrome */
-}
-
-/* Page is at least the window height; main fills the leftover space and
-   grows with its content, pushing the footer down. */
 body {
   margin: 0;
   display: flex;

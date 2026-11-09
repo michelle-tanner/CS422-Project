@@ -37,6 +37,27 @@ const FUNCTIONS = [
   },
 ];
 
+// ---- Functions page: OTHER functions ----
+// Shown when the toggle is switched to the right side.
+// Same shape as FUNCTIONS, but with no color, so every dropdown is gray (--color-function-gray).
+const OTHER_FUNCTIONS = [
+  {
+    label: "Emulsifying",
+    description: "Helps oil and water mix together, so the product stays smooth and doesn't separate.",
+    ingredients: ["Cetearyl alcohol", "Polysorbate 20", "Glyceryl stearate", "Lecithin"],
+  },
+  {
+    label: "Preservative",
+    description: "Keeps bacteria and mold from growing, so the product lasts longer.",
+    ingredients: ["Phenoxyethanol", "Ethylhexylglycerin", "Sodium benzoate", "Potassium sorbate"],
+  },
+  {
+    label: "Viscosity controlling",
+    description: "Makes the product thicker or thinner, so it has the right texture.",
+    ingredients: ["Xanthan gum", "Carbomer", "Hydroxyethylcellulose", "Sodium chloride"],
+  },
+];
+
 // ---- Ingredient INCLUDE / EXCLUDE lists ----
 // The starting choices for the pills' circle (used by data/ingredient-lists.js
 // until the user makes their own choices, which are then saved in the browser).

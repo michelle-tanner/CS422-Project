@@ -87,31 +87,46 @@ class IngredientPill extends HTMLElement {
           color: var(--color-text-muted);
         }
 
-        /* status circle -- default: empty circle with a muted outline */
+        /* status button: the circle and icon are one SVG, so they always stay lined up */
         ingredient-pill .pill-check {
-          width: 1.1em;
-          height: 1.1em;
-          border: 2px solid var(--color-text-muted);
-          border-radius: 50%; /* circle */
-          font-size: 1em;
+          flex: none; /* never squeeze the circle into an oval */
+          width: 18px;
+          height: 18px;
+        }
+
+        ingredient-pill .pill-check svg {
+          display: block;
+          width: 18px;
+          height: 18px;
+          overflow: visible;
+        }
+
+        /* default: empty circle with a muted outline */
+        ingredient-pill .pill-check circle {
+          fill: none;
+          stroke: var(--color-text-muted);
+          stroke-width: 2;
         }
 
         /* check or "x" inside the circle: white so it shows on the colored fill */
-        ingredient-pill .pill-check i {
-          font-size: 0.65em;
-          color: var(--color-text-white);
+        ingredient-pill .pill-check path {
+          fill: none;
+          stroke: var(--color-text-white);
+          stroke-width: 2;
+          stroke-linecap: round;
+          stroke-linejoin: round;
         }
 
         /* green circle with a check */
-        ingredient-pill[status="check"] .pill-check {
-          background-color: var(--color-text-green);
-          border-color: var(--color-text-green);
+        ingredient-pill[status="check"] .pill-check circle {
+          fill: var(--color-text-green);
+          stroke: var(--color-text-green);
         }
 
         /* red circle with an x */
-        ingredient-pill[status="x"] .pill-check {
-          background-color: var(--color-text-red);
-          border-color: var(--color-text-red);
+        ingredient-pill[status="x"] .pill-check circle {
+          fill: var(--color-text-red);
+          stroke: var(--color-text-red);
         }
       `;
       document.head.appendChild(style);
@@ -149,10 +164,12 @@ class IngredientPill extends HTMLElement {
     if (status) this.setAttribute("status", status);
     else this.removeAttribute("status");
 
-    box.innerHTML =
-      status === "check" ? `<i class="fa-solid fa-check" aria-hidden="true"></i>` :
-      status === "x"     ? `<i class="fa-solid fa-xmark" aria-hidden="true"></i>` :
+    // One SVG holds the circle and icon: a CSS border gets rounded to pixels separately from what's inside it
+    const icon =
+      status === "check" ? `<path d="M5.5 9.2 8 11.5 12.5 6.5"/>` :
+      status === "x"     ? `<path d="M6 6 12 12M12 6 6 12"/>` :
       "";
+    box.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8"/>${icon}</svg>`;
 
     const stateText = status === "check" ? "included" : status === "x" ? "excluded" : "not in a list";
     box.setAttribute("aria-label", `${label}: ${stateText}. Click to change.`);
