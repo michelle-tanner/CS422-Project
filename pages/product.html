@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Product — MySkindex</title>
   <link rel="stylesheet" href="../index.css" />
+  <script src="../data/ingredient-lists.js" defer></script>
+  <script src="../components/pill.js" defer></script>
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
 </head>
@@ -177,10 +179,41 @@
   </style>
 
   <script>
-    // Flip the toggle on click. Hook real behavior in here later.
     document.querySelector(".toggle").addEventListener("click", (event) => {
       const toggle = event.currentTarget;
       const isOn = toggle.getAttribute("aria-checked") === "true";
       toggle.setAttribute("aria-checked", String(!isOn));
     });
+  </script>
+
+  <script type="module">
+    const name = new URLSearchParams(window.location.search).get("name");
+    if (!name) return;
+
+    const products = await fetch("../data/products.json").then(r => r.json());
+    const product  = products.find(p => p.name === name);
+    if (!product) return;
+
+    document.title = `${product.name} — MySkindex`;
+
+    if (product.image) {
+      const img = document.querySelector(".product-image");
+      img.src = product.image;
+      img.alt = product.name;
+    }
+
+    document.querySelector(".product-name").textContent = product.name;
+    document.querySelector(".product-type").textContent = product.type ?? "";
+    document.querySelector(".description").textContent  = product.desc ?? "";
+
+    // Key ingredients: render each as a pill
+    const keyEl = document.querySelector(".key-ingredients");
+    if (product.ingreds?.length) {
+      keyEl.innerHTML = "";
+      product.ingreds.forEach(name => {
+        const pill = document.createElement("ingredient-pill");
+        pill.setAttribute("label", name);
+        keyEl.appendChild(pill);
+      });
+    }
   </script>

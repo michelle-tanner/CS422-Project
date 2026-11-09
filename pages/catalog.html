@@ -5,16 +5,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Catalog — MySkindex</title>
   <link rel="stylesheet" href="../index.css" />
+  <!-- ingredient-lists.js must load before pill.js (creates the IngredientLists global) -->
+  <script src="../data/ingredient-lists.js" defer></script>
+  <script src="../components/pill.js" defer></script>
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/product-card.js" defer></script>
 </head>
-<body>
+<body class="main-scroll">
 
   <my-header></my-header>
 
   <main>
-    <h1>Catalog page placeholder</h1>
-    
+    <div class="catalog-layout">
+
+      <!-- Sidebar -->
+      <aside class="catalog-sidebar">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="home.html">home</a>
+          <span class="breadcrumb-sep">&rsaquo;</span>
+          <span aria-current="page">catalog</span>
+        </nav>
+
+        <!-- General -->
+        <div class="sidebar-block">
+          <h2 class="sidebar-heading">General</h2>
+          <hr class="sidebar-divider" />
+          <details class="sidebar-accordion" id="concerns-accordion">
+            <summary>Concerns</summary>
+            <ul class="accordion-list" id="concerns-list"></ul>
+          </details>
+          <hr class="sidebar-divider" />
+          <details class="sidebar-accordion" id="functions-accordion">
+            <summary>Functions</summary>
+            <ul class="accordion-list" id="functions-list"></ul>
+          </details>
+          <hr class="sidebar-divider" />
+        </div>
+
+        <!-- Product search -->
+        <div class="sidebar-search-wrap">
+          <div class="sidebar-search product-search">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" placeholder="search product" aria-label="Search product" />
+          </div>
+          <hr class="sidebar-divider" />
+        </div>
+
+        <!-- Include -->
+        <div class="sidebar-block">
+          <h2 class="sidebar-heading">Include</h2>
+          <hr class="sidebar-divider" />
+          <div class="ingredient-search-wrap">
+            <div class="sidebar-search include-search">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input
+                id="include-input"
+                type="text"
+                placeholder="search ingredient"
+                aria-label="Include ingredient"
+                autocomplete="off"
+              />
+            </div>
+            <ul class="ingredient-dropdown" id="include-dropdown" hidden></ul>
+          </div>
+          <div class="ingredient-pills" id="include-pills"></div>
+          <hr class="sidebar-divider" />
+        </div>
+
+        <!-- Exclude -->
+        <div class="sidebar-block">
+          <h2 class="sidebar-heading">Exclude</h2>
+          <hr class="sidebar-divider" />
+          <div class="ingredient-search-wrap">
+            <div class="sidebar-search exclude-search">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input
+                id="exclude-input"
+                type="text"
+                placeholder="search ingredient"
+                aria-label="Exclude ingredient"
+                autocomplete="off"
+              />
+            </div>
+            <ul class="ingredient-dropdown" id="exclude-dropdown" hidden></ul>
+          </div>
+          <div class="ingredient-pills" id="exclude-pills"></div>
+        </div>
+      </aside>
+
+      <!-- Product Grid -->
+      <section class="product-grid" id="product-grid"></section>
+
+    </div>
   </main>
 
   <my-footer></my-footer>
@@ -22,11 +105,391 @@
 </body>
 </html>
 
+<script type="module">
+  const INGREDIENTS_URL = "../data/ingredients.json";
+  const PRODUCTS_URL    = "../data/products.json";
+  const FUNCTIONS_URL   = "../data/functions.json";
+  const CONCERNS_URL    = "../data/concerns.json";
+
+  const [ingredientsData, productsData, functionsData, concernsData] = await Promise.all([
+    fetch(INGREDIENTS_URL).then(r => r.json()),
+    fetch(PRODUCTS_URL).then(r => r.json()),
+    fetch(FUNCTIONS_URL).then(r => r.json()),
+    fetch(CONCERNS_URL).then(r => r.json()),
+  ]);
+
+  const allIngredientNames = ingredientsData.map(i => i.name);
+
+  /* Search query (URL param or live sidebar input) */
+  let searchQuery = (new URLSearchParams(window.location.search).get("q") || "").trim().toLowerCase();
+
+  const productSearchInput = document.querySelector(".product-search input");
+  productSearchInput.value = searchQuery; // pre-fill from URL if present
+  productSearchInput.addEventListener("input", () => {
+    searchQuery = productSearchInput.value.trim().toLowerCase();
+    filterProducts();
+  });
+
+  /* Selected filter state  */
+  const selectedFunctions = new Set();
+  const selectedConcerns  = new Set(); // concern keys e.g. "acne", "dryness"
+
+  /* Filter + render product grid */
+  const grid = document.getElementById("product-grid");
+
+  function renderGrid(products) {
+    grid.innerHTML = "";
+    products.forEach(product => {
+      const card = document.createElement("product-card");
+      card.setAttribute("name", product.name);
+      card.setAttribute("description", product.type ?? "");
+      if (product.image) card.setAttribute("image", product.image);
+      grid.appendChild(card);
+    });
+  }
+
+  function filterProducts() {
+    const includeIngreds = IngredientLists.getInclude().map(n => n.trim().toLowerCase());
+    const fns            = [...selectedFunctions].map(f => f.toLowerCase());
+
+    const filtered = productsData.filter(product => {
+      const ingreds = (product.ingreds   || []).map(i => i.toLowerCase());
+      const funcs   = (product.functions || []).map(f => f.toLowerCase());
+
+      // Name must match the search query
+      if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return false;
+
+      // Every selected include ingredient must appear in the product
+      if (includeIngreds.length && !includeIngreds.every(i => ingreds.includes(i))) return false;
+
+      // No excluded ingredient may appear in the product
+      const excludeIngreds = IngredientLists.getExclude().map(n => n.trim().toLowerCase());
+      if (excludeIngreds.length && excludeIngreds.some(i => ingreds.includes(i))) return false;
+
+      // Every selected function must appear in the product
+      if (fns.length && !fns.every(f => funcs.includes(f))) return false;
+
+      // For every selected concern, product must contain at least one of that concern's recommended ingredients
+      for (const key of selectedConcerns) {
+        const concern = concernsData.concerns[key];
+        const gofor   = (concern.gofor || []).filter(Boolean).map(g => g.toLowerCase());
+        if (gofor.length && !gofor.some(g => ingreds.some(i => i.includes(g)))) return false;
+      }
+
+      return true;
+    });
+
+    renderGrid(filtered);
+  }
+
+  renderGrid(productsData); // initial render, no filters
+
+  /* Render include / exclude pill sections from IngredientLists */
+  function renderPills() {
+    const includePillsEl = document.getElementById("include-pills");
+    const excludePillsEl = document.getElementById("exclude-pills");
+
+    includePillsEl.innerHTML = "";
+    IngredientLists.getInclude().forEach(name => {
+      const pill = document.createElement("ingredient-pill");
+      pill.setAttribute("label", name);
+      includePillsEl.appendChild(pill);
+    });
+
+    excludePillsEl.innerHTML = "";
+    IngredientLists.getExclude().forEach(name => {
+      const pill = document.createElement("ingredient-pill");
+      pill.setAttribute("label", name);
+      excludePillsEl.appendChild(pill);
+    });
+  }
+
+  // Pill change → update pill display + re-filter
+  window.addEventListener("ingredient-lists-change", () => {
+    renderPills();
+    filterProducts();
+  });
+  renderPills();
+
+  /* Ingredient search dropdowns */
+  function setupIngredientSearch({ inputId, dropdownId, status }) {
+    const input    = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    function renderDropdown(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) { dropdown.hidden = true; return; }
+
+      const matches = allIngredientNames
+        .filter(name => name.toLowerCase().includes(q) && IngredientLists.getStatus(name) !== status)
+        .slice(0, 10);
+
+      if (!matches.length) { dropdown.hidden = true; return; }
+
+      dropdown.innerHTML = "";
+      matches.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.addEventListener("mousedown", e => {
+          e.preventDefault();
+          IngredientLists.setStatus(name, status);
+          input.value = "";
+          dropdown.hidden = true;
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.hidden = false;
+    }
+
+    input.addEventListener("input",  () => renderDropdown(input.value));
+    input.addEventListener("focus",  () => renderDropdown(input.value));
+    input.addEventListener("blur",   () => { dropdown.hidden = true; });
+  }
+
+  setupIngredientSearch({ inputId: "include-input", dropdownId: "include-dropdown", status: "check" });
+  setupIngredientSearch({ inputId: "exclude-input", dropdownId: "exclude-dropdown", status: "x" });
+
+  /* Selectable accordion lists */
+  function buildSelectableList(containerEl, items) {
+    items.forEach(({ label, key, onSelect }) => {
+      const li = document.createElement("li");
+      li.textContent = label;
+      li.addEventListener("click", () => {
+        li.classList.toggle("selected");
+        onSelect(key, li.classList.contains("selected"));
+        filterProducts();
+      });
+      containerEl.appendChild(li);
+    });
+  }
+
+  buildSelectableList(
+    document.getElementById("concerns-list"),
+    Object.entries(concernsData.concerns).map(([key, c]) => ({
+      label: c.label,
+      key,
+      onSelect: (key, active) => active ? selectedConcerns.add(key) : selectedConcerns.delete(key),
+    }))
+  );
+
+  buildSelectableList(
+    document.getElementById("functions-list"),
+    functionsData.map(fn => ({
+      label: fn.label,
+      key:   fn.label,
+      onSelect: (key, active) => active ? selectedFunctions.add(key) : selectedFunctions.delete(key),
+    }))
+  );
+</script>
+
 <style>
-  /* Since index.css gives <main> padding, remove it for this page so content fills edge-to-edge */
   main {
     max-width: none;
+    padding: 0;
+  }
+
+  .catalog-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-xl);
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-lg) var(--space-md);
+    min-height: 100%;
+  }
+
+  /* Sidebar */
+  .catalog-sidebar {
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+  }
+
+  .breadcrumb a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  .sidebar-block,
+  .sidebar-search-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .sidebar-heading {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--color-text);
+    line-height: 1.1;
+  }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1.5px solid #c9b8b4;
     margin: 0;
   }
 
+  /* Accordion (Concerns / Functions) */
+  .sidebar-accordion {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar-accordion summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-text);
+    cursor: pointer;
+    list-style: none;
+    padding: 2px 0;
+  }
+
+  .sidebar-accordion summary::-webkit-details-marker { display: none; }
+
+  .sidebar-accordion summary::before {
+    content: "▶";
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .sidebar-accordion[open] summary::before {
+    content: "▼";
+  }
+
+  .accordion-list {
+    list-style: none;
+    margin: var(--space-sm) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .accordion-list li {
+    padding: 6px var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-transform: capitalize;
+  }
+
+  .accordion-list li:hover {
+    background: var(--color-bg);
+  }
+
+  .accordion-list li.selected {
+    background: var(--color-accent-pill);
+    font-weight: 700;
+  }
+
+  .accordion-list li.selected::after {
+    content: " ✓";
+    font-size: 0.7rem;
+  }
+
+  /* Search inputs */
+  .ingredient-search-wrap {
+    position: relative;
+  }
+
+  .sidebar-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .sidebar-search i {
+    position: absolute;
+    left: 16px;
+    font-size: 1.1rem;
+    color: #999;
+    pointer-events: none;
+  }
+
+  .sidebar-search input {
+    width: 100%;
+    padding: 12px 16px 12px 46px;
+    font-size: 1rem;
+    font-style: italic;
+    border: none;
+    border-radius: var(--radius-pill);
+    color: #999;
+  }
+
+  .sidebar-search input:focus {
+    outline: none;
+    color: var(--color-text);
+    font-style: normal;
+  }
+
+  .product-search input {
+    background: var(--color-bg);
+  }
+
+  .include-search input,
+  .exclude-search input {
+    background: #f5ddd8;
+  }
+
+  /* Dropdown */
+  .ingredient-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid #ddd;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    list-style: none;
+    margin: 0;
+    padding: var(--space-xs) 0;
+    z-index: 100;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .ingredient-dropdown li {
+    padding: 8px 16px;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: var(--color-text);
+  }
+
+  .ingredient-dropdown li:hover {
+    background: var(--color-bg);
+  }
+
+  /* Pill sections (ingredient-pill handles its own styles) */
+  .ingredient-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  /* Product Grid */
+  .product-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    align-content: start;
+  }
 </style>
