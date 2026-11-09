@@ -19,9 +19,18 @@ class ProductCard extends HTMLElement {
       </a>
 
       <style>
+        /* Every card is exactly the same size, however long its name or type is */
+        product-card {
+          display: block;
+          flex: 0 0 155px;
+          width: 155px;
+          height: 246px;
+        }
+
         .product-card {
           display: flex;
           flex-direction: column;
+          height: 100%;
           background: var(--color-surface);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-md);
@@ -39,6 +48,7 @@ class ProductCard extends HTMLElement {
         .product-image {
           width: 100%;
           aspect-ratio: 1 / 1;
+          overflow: hidden; /* keeps it square even when the photo is taller */
           background: var(--color-bg);
           flex-shrink: 0;
         }
@@ -57,18 +67,30 @@ class ProductCard extends HTMLElement {
         }
 
         .product-info {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
           padding: var(--space-sm) var(--space-sm) var(--space-md);
         }
 
+        /* Long names stop after 2 lines with "..." */
         .product-name {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
           margin: 0 0 2px;
           font-size: var(--font-size-sm);
           font-weight: 600;
           color: var(--color-text);
         }
 
+        /* Product type stays on 1 line with "..." */
         .product-description {
           margin: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
           font-size: 0.75rem;
           color: var(--color-text-muted);
         }
