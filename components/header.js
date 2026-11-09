@@ -11,15 +11,8 @@ class MyHeader extends HTMLElement {
         <!-- Pressing Enter submits this form, which goes to catalog.html?q=<what you typed> -->
         <form class="search" action="catalog.html" method="get" role="search">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="text" name="q" placeholder="Search..." aria-label="Search" />
+          <input type="text" name="q" placeholder="Search Products" aria-label="Search" />
         </form>
-        <nav>
-          <a href="#" class="login">Login/Signup</a>
-          <a href="#" class="profile" aria-label="Profile">
-            <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
-          </a>
-        </nav>
-
 
       <style>
         my-header {
@@ -35,7 +28,7 @@ class MyHeader extends HTMLElement {
         my-header .logo {
           font-size: var(--font-size-2xl);
           font-weight: bolder;
-          color: var(--color-text-muted);
+          color: var(--color-text-light);
           text-decoration: none; /* no link underline */
         }
 
@@ -52,7 +45,7 @@ class MyHeader extends HTMLElement {
           position: absolute;
           left: var(--space-md);
           font-size: var(--font-size-lg);
-          color: var(--color-text-muted);
+          color: rgba(0, 0, 0, 0.5);
           pointer-events: none; /* clicks go through to the input */
         }
 
@@ -60,7 +53,7 @@ class MyHeader extends HTMLElement {
           width: 100%;
           padding: 12px var(--space-md) 12px 48px; /* left padding makes room for the icon */
           font-size: var(--font-size-base);
-          border: 1px solid var(--color-border);
+          border: 1px solid var(--color-border-light);
           border-radius: var(--radius-lg);
           background-color: var(--color-surface);
         }
@@ -68,27 +61,6 @@ class MyHeader extends HTMLElement {
         my-header .search input:focus {
           outline: none;
           border-color: var(--color-border-dark);
-        }
-
-        my-header nav {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        /* Plain text look: no blue color or underline */
-        my-header .login {
-          font-family: var(--font-base);
-          font-size: var(--font-size-md);
-          font-weight: normal;
-          color: var(--color-text);
-          text-decoration: none;
-        }
-
-        my-header .profile {
-          font-size: var(--font-size-2xl);
-          line-height: 1;
-          color: var(--color-text);
         }
       </style>
 

@@ -14,7 +14,7 @@
 
   <!-- Decorative bubble, top right, just under the header -->
   <div class="bubble-anchor">
-    <img class="bubble bubble-top" src="../bubble1.png" alt="" />
+    <img class="bubble bubble-top" src="../img/bubble1.png" alt="" />
   </div>
 
   <main>
@@ -67,7 +67,7 @@
 
   <!-- Decorative bubble, bottom left, just above the footer -->
   <div class="bubble-anchor">
-    <img class="bubble bubble-bottom" src="../bubble2.png" alt="" />
+    <img class="bubble bubble-bottom" src="../img/bubble2.png" alt="" />
   </div>
 
   <my-footer></my-footer>
@@ -79,14 +79,15 @@
     /* TOP: image + TEXT side by side */
     .top {
       display: flex;
-      gap: var(--space-2xl);
+      gap: var(--space-3xl);
     }
 
     .product-image {
-      width: 300px;
-      height: 300px;
+      width: 450px;
+      height: 450px;
       flex-shrink: 0; /* don't let the text squeeze it */
       background-color: var(--color-surface);
+      border: 1px solid var(--color-border-dark);
     }
 
     /* TEXT: brand, product, country, type, description stacked */
