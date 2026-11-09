@@ -5,28 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Catalog — MySkindex</title>
   <link rel="stylesheet" href="../index.css" />
-  <!-- ingredient-lists.js must load before pill.js (creates the IngredientLists global) -->
-  <script src="../data/ingredient-lists.js" defer></script>
+  <!-- filter-lists.js must load before pill.js (creates the FilterLists global) -->
+  <script src="../data/filter-lists.js" defer></script>
   <script src="../components/pill.js" defer></script>
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/breadcrumb.js" defer></script>
   <script src="../components/product-card.js" defer></script>
 </head>
 <body class="main-scroll">
 
   <my-header></my-header>
+  <my-breadcrumb current="catalog"></my-breadcrumb>
 
   <main>
     <div class="catalog-layout">
 
       <!-- Sidebar -->
       <aside class="catalog-sidebar">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="home.html">home</a>
-          <span class="breadcrumb-sep">&rsaquo;</span>
-          <span aria-current="page">catalog</span>
-        </nav>
-
         <!-- General -->
         <div class="sidebar-block">
           <h2 class="sidebar-heading">General</h2>
@@ -147,7 +143,7 @@
   }
 
   function filterProducts() {
-    const includeIngreds = IngredientLists.getInclude().map(n => n.trim().toLowerCase());
+    const includeIngreds = FilterLists.getInclude().map(n => n.trim().toLowerCase());
     const fns            = [...selectedFunctions].map(f => f.toLowerCase());
 
     const filtered = productsData.filter(product => {
@@ -161,17 +157,17 @@
       if (includeIngreds.length && !includeIngreds.every(i => ingreds.includes(i))) return false;
 
       // No excluded ingredient may appear in the product
-      const excludeIngreds = IngredientLists.getExclude().map(n => n.trim().toLowerCase());
+      const excludeIngreds = FilterLists.getExclude().map(n => n.trim().toLowerCase());
       if (excludeIngreds.length && excludeIngreds.some(i => ingreds.includes(i))) return false;
 
       // Every selected function must appear in the product
       if (fns.length && !fns.every(f => funcs.includes(f))) return false;
 
-      // For every selected concern, product must contain at least one of that concern's recommended ingredients
+      // For every selected concern, product must have at least one of that concern's "Go For" functions
       for (const key of selectedConcerns) {
         const concern = concernsData.concerns[key];
         const gofor   = (concern.gofor || []).filter(Boolean).map(g => g.toLowerCase());
-        if (gofor.length && !gofor.some(g => ingreds.some(i => i.includes(g)))) return false;
+        if (gofor.length && !gofor.some(g => funcs.includes(g))) return false;
       }
 
       return true;
@@ -180,22 +176,22 @@
     renderGrid(filtered);
   }
 
-  renderGrid(productsData); // initial render, no filters
+  filterProducts(); // first render, using any Include/Exclude choices already saved in localStorage
 
-  /* Render include / exclude pill sections from IngredientLists */
+  /* Render include / exclude pill sections from FilterLists */
   function renderPills() {
     const includePillsEl = document.getElementById("include-pills");
     const excludePillsEl = document.getElementById("exclude-pills");
 
     includePillsEl.innerHTML = "";
-    IngredientLists.getInclude().forEach(name => {
+    FilterLists.getInclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
       includePillsEl.appendChild(pill);
     });
 
     excludePillsEl.innerHTML = "";
-    IngredientLists.getExclude().forEach(name => {
+    FilterLists.getExclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
       excludePillsEl.appendChild(pill);
@@ -203,7 +199,7 @@
   }
 
   // Pill change → update pill display + re-filter
-  window.addEventListener("ingredient-lists-change", () => {
+  window.addEventListener("filter-lists-change", () => {
     renderPills();
     filterProducts();
   });
@@ -219,7 +215,7 @@
       if (!q) { dropdown.hidden = true; return; }
 
       const matches = allIngredientNames
-        .filter(name => name.toLowerCase().includes(q) && IngredientLists.getStatus(name) !== status)
+        .filter(name => name.toLowerCase().includes(q) && FilterLists.getStatus(name) !== status)
         .slice(0, 10);
 
       if (!matches.length) { dropdown.hidden = true; return; }
@@ -230,7 +226,7 @@
         li.textContent = name;
         li.addEventListener("mousedown", e => {
           e.preventDefault();
-          IngredientLists.setStatus(name, status);
+          FilterLists.setStatus(name, status);
           input.value = "";
           dropdown.hidden = true;
         });
@@ -338,22 +334,6 @@
       border-bottom: 1.5px solid #c9b8b4;
     }
   }
-
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-xs);
-  }
-
-  .breadcrumb a {
-    color: var(--color-text-muted);
-    text-decoration: none;
-  }
-
-  .breadcrumb a:hover { text-decoration: underline; }
 
   .sidebar-block,
   .sidebar-search-wrap {

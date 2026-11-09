@@ -7,36 +7,32 @@
   <link rel="stylesheet" href="../index.css" />
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/breadcrumb.js" defer></script>
   <script src="../components/dropdown.js" defer></script>
-  <script src="../data/ingredient-lists.js" defer></script> 
+  <script src="../data/filter-lists.js" defer></script> 
   <script src="../components/pill.js" defer></script>
 </head>
 <body>
 
   <my-header></my-header>
+  <my-breadcrumb current="functions"></my-breadcrumb>
 
   <main>
     <div class="function-toggle" role="group" aria-label="Which functions to show">
-      <button type="button" class="toggle-side" data-side="main" aria-pressed="true">active functions</button>
-      <button type="button" class="toggle-side" data-side="other" aria-pressed="false">inactive functions</button>
+      <button type="button" class="toggle-side" data-side="main" aria-pressed="true">active functions <span class="toggle-count"></span></button>
+      <button type="button" class="toggle-side" data-side="other" aria-pressed="false">inactive functions <span class="toggle-count"></span></button>
     </div>
 
-    <!-- One <function-dropdown> per function gets added here by renderFunctions() below -->
-    <div class="function-list"></div>
+    <!-- One list per tab. Each is filled with <function-dropdown>s by renderFunctions() the first time it's shown -->
+    <div class="function-list" data-side="main"></div>
+    <div class="function-list" data-side="other" hidden></div>
   </main>
 
-  <my-footer></my-footer>
-
-  <!-- MOCK DATA: defines the starting include/exclude choices for the pills. -->
-  <script src="../data/mock-data.js"></script>
 
   <script>
     // Builds one <function-dropdown> for each function in the list and adds it to the page.
     // Each function looks like: { label, color, description, ingredients: ["...", "..."] }
-    function renderFunctions(functions) {
-      const list = document.querySelector(".function-list");
-      list.innerHTML = ""; // clear anything already there
-
+    function renderFunctions(functions, list) {
       functions.forEach((fn) => {
         const dropdown = document.createElement("function-dropdown");
         // setAttribute is safe: the text is never read as HTML
@@ -48,8 +44,15 @@
       });
     }
 
-    // Which functions in functions.json count as "active", and each one's color.
-    // Edit this list to regroup or recolor them. Anything not listed is "inactive" and shows in gray.
+    // Each group in concerns.json and the color its functions show in.
+    const CONCERN_GROUP_COLORS = {
+      gofor: "var(--color-function-green)",
+      thesehelp: "var(--color-function-blue)",
+      avoid: "var(--color-function-red)",
+    };
+
+    // Only used when no skin concern is selected: which functions count as "active", and their colors.
+    // Anything not listed is "inactive" and shows in gray.
     const ACTIVE_FUNCTION_COLORS = {
       // green: hydrates, calms, or protects
       "moisturizer/humectant": "var(--color-function-green)",
@@ -83,7 +86,13 @@
       });
       toggle.dataset.side = side; 
 
-      renderFunctions(side === "other" ? inactiveFunctions : activeFunctions);
+      // Each tab is built once, then just hidden or shown
+      document.querySelectorAll(".function-list").forEach((list) => {
+        list.hidden = list.dataset.side !== side;
+        if (!list.hidden && !list.hasChildNodes()) {
+          renderFunctions(side === "other" ? inactiveFunctions : activeFunctions, list);
+        }
+      });
     }
 
     toggle.addEventListener("click", (event) => {
@@ -91,23 +100,50 @@
       if (button) showSide(button.dataset.side);
     });
 
-    // Load the real functions, sort them into the two groups, and show the active ones.
-    fetch("../data/functions.json")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Couldn't load functions.json (${res.status})`);
+    function loadJson(url) {
+      return fetch(url).then((res) => {
+        if (!res.ok) throw new Error(`Couldn't load ${url} (${res.status})`);
         return res.json();
-      })
-      .then((functions) => {
-        activeFunctions = functions
-          .filter((fn) => fn.label in ACTIVE_FUNCTION_COLORS)
-          .map((fn) => ({ ...fn, color: ACTIVE_FUNCTION_COLORS[fn.label] }));
-        inactiveFunctions = functions.filter((fn) => !(fn.label in ACTIVE_FUNCTION_COLORS));
-        showSide("main");
-      })
-      .catch((error) => {
-        console.error(error);
-        document.querySelector(".function-list").textContent = "Functions couldn't be loaded. Please try again.";
       });
+    }
+
+    // Active = the concern's Go For, These Help, and Avoid functions, in that order.
+    function getConcernFunctions(functions, concern) {
+      return Object.entries(CONCERN_GROUP_COLORS).flatMap(([group, color]) =>
+        functions
+          .filter((fn) => concern[group].includes(fn.label))
+          .map((fn) => ({ ...fn, color }))
+      );
+    }
+
+    function getDefaultFunctions(functions) {
+      return functions
+        .filter((fn) => fn.label in ACTIVE_FUNCTION_COLORS)
+        .map((fn) => ({ ...fn, color: ACTIVE_FUNCTION_COLORS[fn.label] }));
+    }
+
+    // Waits for DOMContentLoaded because FilterLists comes from a deferred script.
+    document.addEventListener("DOMContentLoaded", () => {
+      Promise.all([loadJson("../data/functions.json"), loadJson("../data/concerns.json")])
+        .then(([functions, { concerns }]) => {
+          const concern = concerns[FilterLists.getSelectedConcern()];
+          activeFunctions = concern ? getConcernFunctions(functions, concern) : getDefaultFunctions(functions);
+
+          // Inactive = everything in functions.json that isn't active.
+          const activeLabels = new Set(activeFunctions.map((fn) => fn.label));
+          inactiveFunctions = functions.filter((fn) => !activeLabels.has(fn.label));
+
+          // Show how many functions are in each tab
+          toggle.querySelector('[data-side="main"] .toggle-count').textContent = activeFunctions.length;
+          toggle.querySelector('[data-side="other"] .toggle-count').textContent = inactiveFunctions.length;
+
+          showSide("main");
+        })
+        .catch((error) => {
+          console.error(error);
+          document.querySelector(".function-list").textContent = "Functions couldn't be loaded. Please try again.";
+        });
+    });
   </script>
 
 </body>
@@ -165,6 +201,9 @@
   /* text */ 
   .toggle-side {
     position: relative;
+    display: flex;
+    align-items: center; /* lines up the text and the count circle */
+    justify-content: center;
     padding: var(--space-sm) var(--space-md);
     border: none;
     border-radius: var(--radius-pill);
@@ -180,6 +219,30 @@
 
   .toggle-side[aria-pressed="true"] {
     color: var(--color-bg);
+  }
+
+  /* count: a little circle in the opposite colors of the tab's text */
+  .toggle-count {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-left: var(--space-sm);
+    border-radius: 50%;
+    background-color: var(--color-border-dark);
+    color: var(--color-bg);
+    font-size: var(--font-size-sm);
+    line-height: 1;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .toggle-count:empty {
+    display: none; /* no circle until the count has loaded */
+  }
+
+  .toggle-side[aria-pressed="true"] .toggle-count {
+    background-color: var(--color-bg);
+    color: var(--color-border-dark);
   }
 
   /* keyboard tabbing */

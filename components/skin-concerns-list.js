@@ -48,6 +48,12 @@ class SkinConcernsList extends HTMLElement {
         return;
       }
 
+      // "Explore functions" link: remember which concern was picked for the Functions page
+      if (event.target.closest(".explore-btn")) {
+        FilterLists.setSelectedConcern(this.querySelector("button.concern.is-active").dataset.id);
+        return;
+      }
+
       const button = event.target.closest("button.concern");
       if (!button) return;
       // close already open panel 
@@ -318,6 +324,19 @@ class SkinConcernsList extends HTMLElement {
   //   thesehelp (array), avoid (array)
   // Anything missing shows placeholder text instead.
   showPanel(concern) {
+    // Grow the panel in if it's closed (or still closing). If it's already open, just swap the content.
+    const shouldGrow = this.panel.hidden || Boolean(this.closingAnimation);
+    let startHeight = 0;
+    let startOpacity = 0;
+
+    // If the panel is still closing, stop that and grow back from where it is
+    if (this.closingAnimation) {
+      startHeight = this.panel.offsetHeight;
+      startOpacity = Number(getComputedStyle(this.panel).opacity);
+      this.closingAnimation.cancel();
+      this.closingAnimation = null;
+    }
+
     this.panel.setAttribute("aria-label", `${concern.label} information`);
     this.panel.innerHTML = `
       <button type="button" class="close-panel" aria-label="Close ${escapeHtml(concern.label)} information">
@@ -347,8 +366,8 @@ class SkinConcernsList extends HTMLElement {
         </div>
 
         <!-- A link (not a <button>) because it goes to another page.
-             ?concern= lets functions.html know which concern was picked. -->
-        <a class="explore-btn" href="functions.html?concern=${encodeURIComponent(concern.id)}">
+             Clicking it saves the concern with FilterLists (see the click listener above). -->
+        <a class="explore-btn" href="functions.html">
           <span>Explore functions</span>
           <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           
@@ -359,16 +378,87 @@ class SkinConcernsList extends HTMLElement {
     this.panel.hidden = false;
     this.positionArrow();
     window.addEventListener("resize", this.positionArrow);
-    this.panel.scrollIntoView({ behavior: "smooth", block: "center" }); // scroll so the panel is in the middle of <main>
+
+    if (shouldGrow && !prefersReducedMotion()) {
+      this.growPanel(startHeight, startOpacity);
+    } else {
+      // scroll so the panel is in the middle of <main>
+      this.panel.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    }
   }
 
-  // Hides the panel and puts focus back on the button that opened it.
+  // Grows and fades the panel in (the reverse of closePanel), while scrolling it to the middle of <main>
+  growPanel(startHeight, startOpacity) {
+    const scroller = this.closest("main") || document.scrollingElement; // on the home page, <main> is what scrolls
+    const height = this.panel.offsetHeight;
+
+    // Find where the scroll should end up once the panel is full size, then go back to where we started
+    const from = scroller.scrollTop;
+    this.panel.scrollIntoView({ behavior: "instant", block: "center" });
+    const to = scroller.scrollTop;
+    scroller.scrollTop = from;
+
+    const animation = this.panel.animate(
+      [
+        { height: `${startHeight}px`, minHeight: `${startHeight}px`, opacity: startOpacity },
+        { height: `${height}px`, minHeight: `${height}px`, opacity: 1 },
+      ],
+      { duration: 300, easing: "ease-in-out" }
+    );
+    this.openingAnimation = animation;
+
+    // Scroll in step with the growing panel, so both finish together
+    const followPanel = () => {
+      if (this.openingAnimation !== animation) return; // finished, or interrupted by closing
+      const grown = (this.panel.offsetHeight - startHeight) / Math.max(1, height - startHeight);
+      scroller.scrollTop = from + (to - from) * Math.min(1, Math.max(0, grown));
+      requestAnimationFrame(followPanel);
+    };
+    requestAnimationFrame(followPanel);
+
+    animation.onfinish = () => {
+      this.openingAnimation = null;
+      scroller.scrollTop = to;
+    };
+  }
+
+  // Shrinks and fades the panel out, then hides it and puts focus back on the button that opened it.
   closePanel() {
+    if (this.panel.hidden || this.closingAnimation) return;
+
+    // Start shrinking from wherever the panel is now (it may still be growing)
+    const height = `${this.panel.offsetHeight}px`;
+    const opacity = Number(getComputedStyle(this.panel).opacity);
+    if (this.openingAnimation) {
+      this.openingAnimation.cancel();
+      this.openingAnimation = null;
+    }
+
     const active = this.querySelector("button.concern.is-active");
     this.setActive(null);
-    this.panel.hidden = true;
     window.removeEventListener("resize", this.positionArrow);
-    if (active) active.focus();
+    if (active) active.focus({ preventScroll: true }); // preventScroll: no jump while the panel shrinks
+
+    const hide = () => {
+      this.closingAnimation = null;
+      this.panel.hidden = true;
+    };
+
+    // Skip the animation for people who turned on "reduce motion" in their system settings
+    if (prefersReducedMotion()) {
+      hide();
+      return;
+    }
+
+    // Shrinking the height (not just fading) lets the page slide back smoothly instead of jumping
+    this.closingAnimation = this.panel.animate(
+      [
+        { height, minHeight: height, opacity },
+        { height: "0px", minHeight: "0px", opacity: 0 },
+      ],
+      { duration: 300, easing: "ease-in-out" }
+    );
+    this.closingAnimation.onfinish = hide;
   }
 
   // Moves the arrow so it sits under the center of the selected button.
@@ -381,6 +471,11 @@ class SkinConcernsList extends HTMLElement {
     const x = button.left + button.width / 2 - panel.left; // relative to the panel's left edge
     this.panel.style.setProperty("--arrow-x", `${x}px`);
   };
+}
+
+// True if the person turned on "reduce motion" in their system settings
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 // ---- Small helpers for building the panel's HTML ----
