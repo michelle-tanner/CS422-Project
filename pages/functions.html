@@ -17,12 +17,13 @@
 
   <main>
     <div class="function-toggle" role="group" aria-label="Which functions to show">
-      <button type="button" class="toggle-side" data-side="main" aria-pressed="true">active functions</button>
-      <button type="button" class="toggle-side" data-side="other" aria-pressed="false">inactive functions</button>
+      <button type="button" class="toggle-side" data-side="main" aria-pressed="true">active functions <span class="toggle-count"></span></button>
+      <button type="button" class="toggle-side" data-side="other" aria-pressed="false">inactive functions <span class="toggle-count"></span></button>
     </div>
 
-    <!-- One <function-dropdown> per function gets added here by renderFunctions() below -->
-    <div class="function-list"></div>
+    <!-- One list per tab. Each is filled with <function-dropdown>s by renderFunctions() the first time it's shown -->
+    <div class="function-list" data-side="main"></div>
+    <div class="function-list" data-side="other" hidden></div>
   </main>
 
   <my-footer></my-footer>
@@ -30,10 +31,7 @@
   <script>
     // Builds one <function-dropdown> for each function in the list and adds it to the page.
     // Each function looks like: { label, color, description, ingredients: ["...", "..."] }
-    function renderFunctions(functions) {
-      const list = document.querySelector(".function-list");
-      list.innerHTML = ""; // clear anything already there
-
+    function renderFunctions(functions, list) {
       functions.forEach((fn) => {
         const dropdown = document.createElement("function-dropdown");
         // setAttribute is safe: the text is never read as HTML
@@ -87,7 +85,13 @@
       });
       toggle.dataset.side = side; 
 
-      renderFunctions(side === "other" ? inactiveFunctions : activeFunctions);
+      // Each tab is built once, then just hidden or shown
+      document.querySelectorAll(".function-list").forEach((list) => {
+        list.hidden = list.dataset.side !== side;
+        if (!list.hidden && !list.hasChildNodes()) {
+          renderFunctions(side === "other" ? inactiveFunctions : activeFunctions, list);
+        }
+      });
     }
 
     toggle.addEventListener("click", (event) => {
@@ -127,6 +131,10 @@
           // Inactive = everything in functions.json that isn't active.
           const activeLabels = new Set(activeFunctions.map((fn) => fn.label));
           inactiveFunctions = functions.filter((fn) => !activeLabels.has(fn.label));
+
+          // Show how many functions are in each tab
+          toggle.querySelector('[data-side="main"] .toggle-count').textContent = activeFunctions.length;
+          toggle.querySelector('[data-side="other"] .toggle-count').textContent = inactiveFunctions.length;
 
           showSide("main");
         })
@@ -192,6 +200,9 @@
   /* text */ 
   .toggle-side {
     position: relative;
+    display: flex;
+    align-items: center; /* lines up the text and the count circle */
+    justify-content: center;
     padding: var(--space-sm) var(--space-md);
     border: none;
     border-radius: var(--radius-pill);
@@ -207,6 +218,30 @@
 
   .toggle-side[aria-pressed="true"] {
     color: var(--color-bg);
+  }
+
+  /* count: a little circle in the opposite colors of the tab's text */
+  .toggle-count {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-left: var(--space-sm);
+    border-radius: 50%;
+    background-color: var(--color-border-dark);
+    color: var(--color-bg);
+    font-size: var(--font-size-sm);
+    line-height: 1;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .toggle-count:empty {
+    display: none; /* no circle until the count has loaded */
+  }
+
+  .toggle-side[aria-pressed="true"] .toggle-count {
+    background-color: var(--color-bg);
+    color: var(--color-border-dark);
   }
 
   /* keyboard tabbing */
