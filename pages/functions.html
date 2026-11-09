@@ -7,23 +7,136 @@
   <link rel="stylesheet" href="../index.css" />
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
+  <script src="../components/dropdown.js" defer></script>
+  <script src="../data/ingredient-lists.js" defer></script> 
+  <script src="../components/pill.js" defer></script>
 </head>
 <body>
 
   <my-header></my-header>
 
   <main>
-    <h1>Functions page placeholder</h1>
+    <div class="function-toggle" role="group" aria-label="Which functions to show">
+      <button type="button" class="toggle-side" data-side="main" aria-pressed="true">active functions</button>
+      <button type="button" class="toggle-side" data-side="other" aria-pressed="false">inactive functions</button>
+    </div>
+
+    <!-- One <function-dropdown> per function gets added here by renderFunctions() below -->
+    <div class="function-list"></div>
   </main>
 
   <my-footer></my-footer>
+
+  <!-- MOCK DATA: defines FUNCTIONS and OTHER_FUNCTIONS. Remove this line once the real data is loaded. -->
+  <script src="../data/mock-data.js"></script>
+
+  <script>
+    // Builds one <function-dropdown> for each function in the list and adds it to the page.
+    // Each function looks like: { label, color, description, ingredients: ["...", "..."] }
+    function renderFunctions(functions) {
+      const list = document.querySelector(".function-list");
+      list.innerHTML = ""; // clear anything already there
+
+      functions.forEach((fn) => {
+        const dropdown = document.createElement("function-dropdown");
+        // setAttribute is safe: the text is never read as HTML
+        dropdown.setAttribute("function-label", fn.label);
+        if (fn.color) dropdown.setAttribute("color", fn.color); // no color -> the dropdown uses gray
+        dropdown.setAttribute("description", fn.description);
+        dropdown.setAttribute("ingredients", JSON.stringify(fn.ingredients)); // attributes only hold text, so turn the list into JSON
+        list.appendChild(dropdown);
+      });
+    }
+
+    // Toggle: "Active functions" (left) shows FUNCTIONS, "Inactive functions" (right) shows OTHER_FUNCTIONS.
+    // Uses the mock lists for now. With real data, swap in those lists instead.
+    const toggle = document.querySelector(".function-toggle");
+
+    function showSide(side) {
+      toggle.querySelectorAll(".toggle-side").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.side === side));
+      });
+      toggle.dataset.side = side; 
+
+      renderFunctions(side === "other" ? OTHER_FUNCTIONS : FUNCTIONS);
+    }
+
+    toggle.addEventListener("click", (event) => {
+      const button = event.target.closest(".toggle-side");
+      if (button) showSide(button.dataset.side);
+    });
+
+    showSide("main");
+  </script>
 
 </body>
 </html>
 
 <style>
-  /* Since index.css gives <main> padding, remove it for this page so content fills edge-to-edge */
   main {
     max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .function-list {
+    width: 100%;
+  }
+
+  /* ---- TOGGLE ---- */
+  /* the track: a rounded bar split into two equal halves, one per word */
+  .function-toggle {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    padding: 0;
+    margin: var(--space-xl) var(--space-xl);
+    border: 3px solid var(--color-border-dark);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-bg);
+  }
+
+  /* the highlight that sits behind the picked word and slides between sides */
+  .function-toggle::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: calc(50%); 
+    border-radius: var(--radius-pill);
+    background-color: var(--color-border-dark); 
+    transition: transform 0.3s;
+  }
+
+  /* right side picked: slide the highlight over */
+  .function-toggle[data-side="other"]::before {
+    transform: translateX(100%);
+  }
+
+  /* text */ 
+  .toggle-side {
+    position: relative;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--color-text);
+    font-family: var(--font-base);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .toggle-side[aria-pressed="true"] {
+    color: var(--color-bg);
+  }
+
+  /* keyboard tabbing */
+  .toggle-side:focus-visible {
+    outline: 2px solid var(--color-border-dark);
   }
 </style>

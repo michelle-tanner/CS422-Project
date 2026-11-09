@@ -8,10 +8,6 @@
 // Optional attribute:
 //   direction="column"  -> stack the buttons vertically instead of in a row
 
-// TEMPORARY: set to true to open the first concern's info panel when the page loads (for styling).
-// It can still be closed normally. Set back to false (or delete it and its use) when done.
-const ALWAYS_SHOW_PANEL = true;
-
 const SKIN_CONCERNS = [
   { label: "Redness",        icon: "fa-fire",          id: "redness" },
   { label: "Acne",           icon: "fa-circle-dot",    id: "acne" },
@@ -162,7 +158,6 @@ class SkinConcernsList extends HTMLElement {
           position: relative; /* so the arrow below is placed relative to the panel */
           display: grid;
           grid-template-columns: 65fr 35fr; /* left side 65% | right side 35% */
-          margin: 40px 0 var(--panel-gap);
           /* Minimum height so the panel can be scrolled to the center of <main>.
              100cqh = the height of <main> (it's a size container, see index.css).
              Taking away the gap twice leaves the same space above and below the panel. */
@@ -265,9 +260,9 @@ class SkinConcernsList extends HTMLElement {
           padding-left: var(--space-lg);
         }
 
-        skin-concerns-list .go-for     { color: var(--color-function-green); } /* #509C8E */
-        skin-concerns-list .these-help { color: var(--color-function-blue); }  /* #356B89 */
-        skin-concerns-list .avoid      { color: var(--color-function-red); }   /* #C65F5E */
+        skin-concerns-list .go-for     { color: var(--color-text-green); } /* #509C8E */
+        skin-concerns-list .these-help { color: var(--color-text-blue); }  /* #356B89 */
+        skin-concerns-list .avoid      { color: var(--color-text-red); }   /* #C65F5E */
 
         /* X (close) button, pinned to the panel's top-right corner */
         skin-concerns-list .close-panel {
@@ -310,13 +305,6 @@ class SkinConcernsList extends HTMLElement {
           
       `;
       document.head.appendChild(style);
-    }
-
-    // TEMPORARY: open the first concern's panel on page load (see ALWAYS_SHOW_PANEL).
-    if (ALWAYS_SHOW_PANEL) {
-      const first = this.querySelector("button.concern");
-      this.setActive(first);
-      this.showPanel(SKIN_CONCERNS[0], getConcernData(SKIN_CONCERNS[0].id));
     }
   }
 
