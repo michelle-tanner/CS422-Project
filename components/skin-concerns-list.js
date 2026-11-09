@@ -1,6 +1,6 @@
 // skin-concerns-list.js
 // Defines the <skin-concerns-list> custom element. It turns the SKIN_CONCERNS
-// array below into a row of buttons, laid out with flexbox.
+// data (loaded from concerns.json) into a row of buttons, laid out with flexbox.
 //
 // Usage:
 //   <skin-concerns-list></skin-concerns-list>
@@ -8,18 +8,13 @@
 // Optional attribute:
 //   direction="column"  -> stack the buttons vertically instead of in a row
 
-const SKIN_CONCERNS = [
-  { label: "Redness",        icon: "fa-fire",          id: "redness" },
-  { label: "Acne",           icon: "fa-circle-dot",    id: "acne" },
-  { label: "Anti-aging",     icon: "fa-hourglass-half", id: "anti-aging" },
-  { label: "Dryness",        icon: "fa-droplet-slash", id: "dryness" },
-  { label: "Dark spots",     icon: "fa-sun",           id: "dark-spots" },
-  { label: "Clogged pores",  icon: "fa-braille",       id: "clogged-pores" },
-  { label: "Texture",        icon: "fa-hand-dots",     id: "texture" },
-  { label: "Sensitive skin", icon: "fa-feather",       id: "sensitive-skin" },
-  { label: "Dullness",       icon: "fa-cloud",         id: "dullness" },
-  { label: "Oiliness",       icon: "fa-droplet",       id: "oiliness" },
-];
+import CONCERNS_DATA from '../data/concerns.json' with { type: 'json' };
+
+// Turn the JSON object ({ redness: {...}, acne: {...} }) into the same array
+// shape the rest of this file already uses: [{ id: "redness", label, icon, ... }]
+const SKIN_CONCERNS = Object.entries(CONCERNS_DATA.concerns).map(
+  ([id, concern]) => ({ id, ...concern })
+);
 
 class SkinConcernsList extends HTMLElement {
   connectedCallback() {
@@ -62,14 +57,14 @@ class SkinConcernsList extends HTMLElement {
       }
 
       const id = button.dataset.id;
-      const data = getConcernData(id);
       const concern = SKIN_CONCERNS.find((c) => c.id === id);
+      if (!concern) return;
 
       this.setActive(button);
-      this.showPanel(concern, data);
+      this.showPanel(concern);
 
       this.dispatchEvent(
-        new CustomEvent("concern-select", { detail: { id, data }, bubbles: true })
+        new CustomEvent("concern-select", { detail: { id, data: concern }, bubbles: true })
       );
     });
 
@@ -193,7 +188,7 @@ class SkinConcernsList extends HTMLElement {
         }
 
         skin-concerns-list .panel-left {
-          background-color: var(--color-accent-muted); 
+          background-color: var(--color-accent-muted);
         }
 
         skin-concerns-list .panel-right {
@@ -318,18 +313,11 @@ class SkinConcernsList extends HTMLElement {
 
   // Fills the panel with one concern's info and shows it.
   //
-  // Expected data shape (saved in localStorage under the concern's id):
-  //   {
-  //     "description": "What it is...",
-  //     "causes":      "Common causes...",   (a string, or an array of strings)
-  //     "goFor":       ["...", "..."],
-  //     "theseHelp":   ["...", "..."],
-  //     "avoid":       ["...", "..."]
-  //   }
+  // Reads these fields from the concern's entry in concerns.json:
+  //   description (string), causes (array), gofor (array),
+  //   thesehelp (array), avoid (array)
   // Anything missing shows placeholder text instead.
-  showPanel(concern, data) {
-    const d = data || {};
-
+  showPanel(concern) {
     this.panel.setAttribute("aria-label", `${concern.label} information`);
     this.panel.innerHTML = `
       <button type="button" class="close-panel" aria-label="Close ${escapeHtml(concern.label)} information">
@@ -338,12 +326,10 @@ class SkinConcernsList extends HTMLElement {
 
       <div class="panel-left">
         <h2>${escapeHtml(concern.label)}</h2>
-        ${renderText(d.description, `Description of ${concern.label.toLowerCase()} goes here.`)}
+        ${renderText(concern.description, `Description of ${concern.label.toLowerCase()} goes here.`)}
 
         <h3>Common causes</h3>
-        ${Array.isArray(d.causes)
-          ? renderList(d.causes, "Common causes go here.")
-          : renderText(d.causes, "Common causes go here.")}
+        ${renderList(concern.causes, "Common causes go here.")}
       </div>
 
       <div class="panel-right">
@@ -351,13 +337,13 @@ class SkinConcernsList extends HTMLElement {
              Explore button to the bottom of the panel -->
         <div class="panel-right-content">
           <h3 class="go-for">Go For</h3>
-          ${renderList(d.goFor, "Ingredients to look for go here.")}
+          ${renderList(concern.gofor, "Ingredients to look for go here.")}
 
           <h3 class="these-help">These Help</h3>
-          ${renderList(d.theseHelp, "Helpful products go here.")}
+          ${renderList(concern.thesehelp, "Helpful products go here.")}
 
           <h3 class="avoid">Avoid</h3>
-          ${renderList(d.avoid, "Things to avoid go here.")}
+          ${renderList(concern.avoid, "Things to avoid go here.")}
         </div>
 
         <!-- A link (not a <button>) because it goes to another page.
@@ -421,17 +407,6 @@ function renderList(items, placeholder) {
     return `<p class="placeholder">${placeholder}</p>`;
   }
   return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
-}
-
-// Reads a concern's saved data from localStorage, using its id as the key.
-// Returns null if nothing has been saved yet (or storage is unavailable).
-function getConcernData(id) {
-  try {
-    const raw = localStorage.getItem(id);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
 }
 
 customElements.define("skin-concerns-list", SkinConcernsList);

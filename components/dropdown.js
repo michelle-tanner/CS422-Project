@@ -10,7 +10,7 @@
 //   ></function-dropdown>
 //
 // These attributes are filled in from the data we retrieve
-// (see renderFunctions() in pages/functions.html and the FUNCTIONS list in data/mock-data.js).
+// (see renderFunctions() in pages/functions.html and data/functions.json).
 
 class MyDropdown extends HTMLElement {
   static get observedAttributes() {

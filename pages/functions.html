@@ -27,7 +27,7 @@
 
   <my-footer></my-footer>
 
-  <!-- MOCK DATA: defines FUNCTIONS and OTHER_FUNCTIONS. Remove this line once the real data is loaded. -->
+  <!-- MOCK DATA: defines the starting include/exclude choices for the pills. -->
   <script src="../data/mock-data.js"></script>
 
   <script>
@@ -48,8 +48,33 @@
       });
     }
 
-    // Toggle: "Active functions" (left) shows FUNCTIONS, "Inactive functions" (right) shows OTHER_FUNCTIONS.
-    // Uses the mock lists for now. With real data, swap in those lists instead.
+    // Which functions in functions.json count as "active", and each one's color.
+    // Edit this list to regroup or recolor them. Anything not listed is "inactive" and shows in gray.
+    const ACTIVE_FUNCTION_COLORS = {
+      // green: hydrates, calms, or protects
+      "moisturizer/humectant": "var(--color-function-green)",
+      "emollient": "var(--color-function-green)",
+      "soothing": "var(--color-function-green)",
+      "skin-identical ingredient": "var(--color-function-green)",
+      "antioxidant": "var(--color-function-green)",
+      "cell-communicating ingredient": "var(--color-function-green)",
+      "sunscreen": "var(--color-function-green)",
+      // blue: treats or exfoliates
+      "exfoliant": "var(--color-function-blue)",
+      "abrasive/scrub": "var(--color-function-blue)",
+      "anti-acne": "var(--color-function-blue)",
+      "skin brightening": "var(--color-function-blue)",
+      "absorbent/mattifier": "var(--color-function-blue)",
+      "antimicrobial/antibacterial": "var(--color-function-blue)",
+      "astringent": "var(--color-function-blue)",
+      // red: can irritate
+      "perfuming": "var(--color-function-red)",
+    };
+
+    let activeFunctions = [];
+    let inactiveFunctions = [];
+
+    // Toggle: "Active functions" (left) shows activeFunctions, "Inactive functions" (right) shows inactiveFunctions.
     const toggle = document.querySelector(".function-toggle");
 
     function showSide(side) {
@@ -58,7 +83,7 @@
       });
       toggle.dataset.side = side; 
 
-      renderFunctions(side === "other" ? OTHER_FUNCTIONS : FUNCTIONS);
+      renderFunctions(side === "other" ? inactiveFunctions : activeFunctions);
     }
 
     toggle.addEventListener("click", (event) => {
@@ -66,7 +91,23 @@
       if (button) showSide(button.dataset.side);
     });
 
-    showSide("main");
+    // Load the real functions, sort them into the two groups, and show the active ones.
+    fetch("../data/functions.json")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Couldn't load functions.json (${res.status})`);
+        return res.json();
+      })
+      .then((functions) => {
+        activeFunctions = functions
+          .filter((fn) => fn.label in ACTIVE_FUNCTION_COLORS)
+          .map((fn) => ({ ...fn, color: ACTIVE_FUNCTION_COLORS[fn.label] }));
+        inactiveFunctions = functions.filter((fn) => !(fn.label in ACTIVE_FUNCTION_COLORS));
+        showSide("main");
+      })
+      .catch((error) => {
+        console.error(error);
+        document.querySelector(".function-list").textContent = "Functions couldn't be loaded. Please try again.";
+      });
   </script>
 
 </body>
@@ -82,6 +123,12 @@
 
   .function-list {
     width: 100%;
+  }
+
+  /* The real data is all lowercase, so capitalize the first letter when showing it */
+  function-dropdown .dropdown-toggle > span:first-child::first-letter,
+  ingredient-pill .pill-label::first-letter {
+    text-transform: uppercase;
   }
 
   /* ---- TOGGLE ---- */
