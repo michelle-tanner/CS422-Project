@@ -88,6 +88,30 @@
   box-sizing: border-box;
 }
 
+/* ---- Scrollbars (every scrollable area on every page) ----
+   Thin, with a faint half-see-through thumb and no track. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-muted) 50%, transparent) transparent;
+}
+
+/* Same look for browsers that don't support scrollbar-color yet (older Safari) */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-text-muted) 50%, transparent);
+  }
+}
+
 html {
   overflow-x:clip;
 }
