@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Catalog — MySkindex</title>
   <link rel="stylesheet" href="../index.css" />
-  <!-- ingredient-lists.js must load before pill.js (creates the IngredientLists global) -->
-  <script src="../data/ingredient-lists.js" defer></script>
+  <!-- filter-lists.js must load before pill.js (creates the FilterLists global) -->
+  <script src="../data/filter-lists.js" defer></script>
   <script src="../components/pill.js" defer></script>
   <script src="../components/header.js" defer></script>
   <script src="../components/footer.js" defer></script>
@@ -23,12 +23,6 @@
 
       <!-- Sidebar -->
       <aside class="catalog-sidebar">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="home.html">home</a>
-          <span class="breadcrumb-sep">&rsaquo;</span>
-          <span aria-current="page">catalog</span>
-        </nav>
-
         <!-- General -->
         <div class="sidebar-block">
           <h2 class="sidebar-heading">General</h2>
@@ -43,15 +37,10 @@
             <ul class="accordion-list" id="functions-list"></ul>
           </details>
           <hr class="sidebar-divider" />
-        </div>
-
-        <!-- Product search -->
-        <div class="sidebar-search-wrap">
           <div class="sidebar-search product-search">
             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             <input type="text" placeholder="search product" aria-label="Search product" />
           </div>
-          <hr class="sidebar-divider" />
         </div>
 
         <!-- Include -->
@@ -72,7 +61,6 @@
             <ul class="ingredient-dropdown" id="include-dropdown" hidden></ul>
           </div>
           <div class="ingredient-pills" id="include-pills"></div>
-          <hr class="sidebar-divider" />
         </div>
 
         <!-- Exclude -->
@@ -102,8 +90,6 @@
     </div>
   </main>
 
-  <my-footer></my-footer>
-
 </body>
 </html>
 
@@ -132,9 +118,12 @@
     filterProducts();
   });
 
-  /* Selected filter state  */
-  const selectedFunctions = new Set();
-  const selectedConcerns  = new Set(); // concern keys e.g. "acne", "dryness"
+  /* Selected filter state: starts with the concerns and functions saved in localStorage
+     (selectedConcerns / selectedFunctions), so those boxes are already checked when the catalog opens.
+     Every checkbox change is saved back, so a refresh keeps the same boxes checked. */
+  const functionLabels    = new Set(functionsData.map(fn => fn.label));
+  const selectedFunctions = new Set(FilterLists.getSelectedFunctions().filter(f => functionLabels.has(f)));
+  const selectedConcerns  = new Set(FilterLists.getSelectedConcerns().filter(c => c in concernsData.concerns)); // e.g. "acne"
 
   /* Filter + render product grid */
   const grid = document.getElementById("product-grid");
@@ -151,7 +140,7 @@
   }
 
   function filterProducts() {
-    const includeIngreds = IngredientLists.getInclude().map(n => n.trim().toLowerCase());
+    const includeIngreds = FilterLists.getInclude().map(n => n.trim().toLowerCase());
     const fns            = [...selectedFunctions].map(f => f.toLowerCase());
 
     const filtered = productsData.filter(product => {
@@ -165,17 +154,17 @@
       if (includeIngreds.length && !includeIngreds.every(i => ingreds.includes(i))) return false;
 
       // No excluded ingredient may appear in the product
-      const excludeIngreds = IngredientLists.getExclude().map(n => n.trim().toLowerCase());
+      const excludeIngreds = FilterLists.getExclude().map(n => n.trim().toLowerCase());
       if (excludeIngreds.length && excludeIngreds.some(i => ingreds.includes(i))) return false;
 
       // Every selected function must appear in the product
       if (fns.length && !fns.every(f => funcs.includes(f))) return false;
 
-      // For every selected concern, product must contain at least one of that concern's recommended ingredients
+      // For every selected concern, product must have at least one of that concern's "Go For" functions
       for (const key of selectedConcerns) {
         const concern = concernsData.concerns[key];
         const gofor   = (concern.gofor || []).filter(Boolean).map(g => g.toLowerCase());
-        if (gofor.length && !gofor.some(g => ingreds.some(i => i.includes(g)))) return false;
+        if (gofor.length && !gofor.some(g => funcs.includes(g))) return false;
       }
 
       return true;
@@ -184,22 +173,22 @@
     renderGrid(filtered);
   }
 
-  renderGrid(productsData); // initial render, no filters
+  filterProducts(); // first render, using any Include/Exclude choices already saved in localStorage
 
-  /* Render include / exclude pill sections from IngredientLists */
+  /* Render include / exclude pill sections from FilterLists */
   function renderPills() {
     const includePillsEl = document.getElementById("include-pills");
     const excludePillsEl = document.getElementById("exclude-pills");
 
     includePillsEl.innerHTML = "";
-    IngredientLists.getInclude().forEach(name => {
+    FilterLists.getInclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
       includePillsEl.appendChild(pill);
     });
 
     excludePillsEl.innerHTML = "";
-    IngredientLists.getExclude().forEach(name => {
+    FilterLists.getExclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
       excludePillsEl.appendChild(pill);
@@ -207,7 +196,7 @@
   }
 
   // Pill change → update pill display + re-filter
-  window.addEventListener("ingredient-lists-change", () => {
+  window.addEventListener("filter-lists-change", () => {
     renderPills();
     filterProducts();
   });
@@ -223,7 +212,7 @@
       if (!q) { dropdown.hidden = true; return; }
 
       const matches = allIngredientNames
-        .filter(name => name.toLowerCase().includes(q) && IngredientLists.getStatus(name) !== status)
+        .filter(name => name.toLowerCase().includes(q) && FilterLists.getStatus(name) !== status)
         .slice(0, 10);
 
       if (!matches.length) { dropdown.hidden = true; return; }
@@ -234,7 +223,7 @@
         li.textContent = name;
         li.addEventListener("mousedown", e => {
           e.preventDefault();
-          IngredientLists.setStatus(name, status);
+          FilterLists.setStatus(name, status);
           input.value = "";
           dropdown.hidden = true;
         });
@@ -251,16 +240,29 @@
   setupIngredientSearch({ inputId: "include-input", dropdownId: "include-dropdown", status: "check" });
   setupIngredientSearch({ inputId: "exclude-input", dropdownId: "exclude-dropdown", status: "x" });
 
-  /* Selectable accordion lists */
-  function buildSelectableList(containerEl, items) {
+  /* Accordion lists: one checkbox per option */
+  // `selected` = the Set holding the checked keys, so saved choices start checked
+  function buildSelectableList(containerEl, items, selected) {
     items.forEach(({ label, key, onSelect }) => {
       const li = document.createElement("li");
-      li.textContent = label;
-      li.addEventListener("click", () => {
-        li.classList.toggle("selected");
-        onSelect(key, li.classList.contains("selected"));
+      const row = document.createElement("label"); // clicking the text also ticks the box
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selected.has(key);
+      const text = document.createElement("span");
+      // <wbr> after each "/" lets "moisturizer/humectant" wrap after the slash instead of mid-word
+      label.split("/").forEach((part, i) => {
+        if (i > 0) text.append("/", document.createElement("wbr"));
+        text.append(part);
+      });
+
+      checkbox.addEventListener("change", () => {
+        onSelect(key, checkbox.checked);
         filterProducts();
       });
+
+      row.append(checkbox, text);
+      li.appendChild(row);
       containerEl.appendChild(li);
     });
   }
@@ -270,8 +272,12 @@
     Object.entries(concernsData.concerns).map(([key, c]) => ({
       label: c.label,
       key,
-      onSelect: (key, active) => active ? selectedConcerns.add(key) : selectedConcerns.delete(key),
-    }))
+      onSelect: (key, active) => {
+        active ? selectedConcerns.add(key) : selectedConcerns.delete(key);
+        FilterLists.setSelectedConcerns(selectedConcerns);
+      },
+    })),
+    selectedConcerns
   );
 
   buildSelectableList(
@@ -279,9 +285,17 @@
     functionsData.map(fn => ({
       label: fn.label,
       key:   fn.label,
-      onSelect: (key, active) => active ? selectedFunctions.add(key) : selectedFunctions.delete(key),
-    }))
+      onSelect: (key, active) => {
+        active ? selectedFunctions.add(key) : selectedFunctions.delete(key);
+        FilterLists.setSelectedFunctions(selectedFunctions);
+      },
+    })),
+    selectedFunctions
   );
+
+  // Open the Concerns / Functions sections that already have a box checked, so the user sees why
+  if (selectedConcerns.size)  document.getElementById("concerns-accordion").open = true;
+  if (selectedFunctions.size) document.getElementById("functions-accordion").open = true;
 </script>
 
 <style>
@@ -290,42 +304,49 @@
     padding: 0;
   }
 
-  .catalog-layout {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-xl);
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: var(--space-lg) var(--space-md);
-    min-height: 100%;
+  /* Catalog only: <main> fills the whole screen (no padding), and the page itself never scrolls.
+     Only the product box scrolls (see .product-grid). */
+  body.main-scroll main {
+    overflow: hidden;
+    padding: 0;
   }
 
-  /* Sidebar */
+  .catalog-layout {
+    display: flex;
+    width: 100%;
+    height: 100%; /* exactly the space under the header, so nothing spills past the window */
+  }
+
+  /* Sidebar: full height, against the left edge of the screen.
+     Its width follows the screen: 24% of it, but never narrower than 220px or wider than 340px. */
   .catalog-sidebar {
-    flex: 0 0 240px;
+    flex: 0 0 clamp(220px, 24%, 340px);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-lg);
+    border-right: 1.5px solid #c9b8b4; /* same color as the sidebar dividers */
+    background-color: var(--color-surface);
+    overflow-y: auto; /* only scrolls if open sections make it taller than the window */
   }
 
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-xs);
+  /* Small screens (phones): filters go on top, products underneath */
+  @media (max-width: 700px) {
+    .catalog-layout {
+      flex-direction: column;
+    }
+
+    .catalog-sidebar {
+      flex: 0 1 auto;
+      max-height: 45%;
+      border-right: none;
+      border-bottom: 1.5px solid #c9b8b4;
+    }
   }
 
-  .breadcrumb a {
-    color: var(--color-text-muted);
-    text-decoration: none;
-  }
-
-  .breadcrumb a:hover { text-decoration: underline; }
-
-  .sidebar-block,
-  .sidebar-search-wrap {
+  .sidebar-block {
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
@@ -333,15 +354,15 @@
 
   .sidebar-heading {
     margin: 0;
-    font-size: 1.6rem;
-    font-weight: 900;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
     color: var(--color-text);
     line-height: 1.1;
   }
 
   .sidebar-divider {
     border: none;
-    border-top: 1.5px solid #c9b8b4;
+    border-top: 1px solid #c9b8b4;
     margin: 0;
   }
 
@@ -354,13 +375,12 @@
   .sidebar-accordion summary {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
-    font-size: 1.3rem;
-    font-weight: 800;
+    gap: var(--space-md);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
     color: var(--color-text);
     cursor: pointer;
     list-style: none;
-    padding: 2px 0;
   }
 
   .sidebar-accordion summary::-webkit-details-marker { display: none; }
@@ -375,35 +395,61 @@
     content: "▼";
   }
 
+  /* Box around each checkbox list */
   .accordion-list {
     list-style: none;
-    margin: var(--space-sm) 0 0;
-    padding: 0;
+    margin: 0;
+    max-height: 280px; /* the full height of the Concerns list; longer lists scroll inside the box */
+    overflow-y: auto; /* faint scrollbar style comes from index.css */
+    padding: var(--space-sm) var(--space-md);
+    border: 4px solid var(--color-border-light);
+    border-radius: var(--radius-lg); /* 20px */
     display: flex;
     flex-direction: column;
   }
 
-  .accordion-list li {
-    padding: 6px var(--space-sm);
-    font-size: var(--font-size-sm);
+  /* One option: just a checkbox and its name */
+  .accordion-list label {
+    display: flex;
+    align-items: flex-start; /* checkbox lines up with the first line of text, even when the name wraps */
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-base);
     color: var(--color-text);
-    border-radius: var(--radius-sm);
     cursor: pointer;
     text-transform: capitalize;
   }
 
-  .accordion-list li:hover {
-    background: var(--color-bg);
+  /* Long names wrap onto the next line (at spaces or after a "/"). A word is only split if it can't fit at all. */
+  .accordion-list label span {
+    min-width: 0;
+    overflow-wrap: break-word;
   }
 
-  .accordion-list li.selected {
-    background: var(--color-accent-pill);
-    font-weight: 700;
+  /* Custom checkbox (appearance: none lets us set the corners and the checked color) */
+  .accordion-list input[type="checkbox"] {
+    appearance: none;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    font: inherit; /* same font and line height as the label, so 1lh below is one line of its text */
+    margin: calc((1lh - 16px) / 2) 0 0; /* centers the box on the first line of text */
+    border: 1.5px solid var(--color-text-muted);
+    border-radius: 3px; /* just slightly rounder than the browser's default */
+    background-color: var(--color-surface);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 12px;
+    cursor: pointer;
   }
 
-  .accordion-list li.selected::after {
-    content: " ✓";
-    font-size: 0.7rem;
+  /* Checked: green fill with a white check mark */
+  .accordion-list input[type="checkbox"]:checked {
+    border-color: var(--color-accent-checklist);
+    border-radius: 4px;
+    background-color: var(--color-accent-checklist);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.5 9.5 3.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 
   /* Search inputs */
@@ -415,6 +461,7 @@
     position: relative;
     display: flex;
     align-items: center;
+    margin-top: 4px;
   }
 
   .sidebar-search i {
@@ -427,22 +474,24 @@
 
   .sidebar-search input {
     width: 100%;
-    padding: 12px 16px 12px 46px;
-    font-size: 1rem;
+    padding: 10px 16px 10px 46px;
+    font-size: var(--font-size-sm);
     font-style: italic;
     border: none;
     border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.10); /* same inner shadow as the pills (pill.js) */
     color: #999;
   }
 
+  /* Clicked into: darker inner shadow (40% instead of 10%); text stays italic */
   .sidebar-search input:focus {
     outline: none;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
     color: var(--color-text);
-    font-style: normal;
   }
 
   .product-search input {
-    background: var(--color-bg);
+    background: var(--color-bg); /* light beige, so it stands out on the white sidebar */
   }
 
   .include-search input,
@@ -486,12 +535,42 @@
     gap: var(--space-sm);
   }
 
-  /* Product Grid */
+  /* Catalog only: smaller pills than the default in pill.js */
+  .ingredient-pills ingredient-pill {
+    font-size: var(--font-size-xs); /* default: --font-size-base */
+    padding: var(--space-xs) var(--space-sm); /* default: --space-sm --space-lg */
+    gap: var(--space-xs); /* default: --space-sm */
+  }
+
+  /* Smaller status circle: default is 18px */
+  .ingredient-pills ingredient-pill .pill-check,
+  .ingredient-pills ingredient-pill .pill-check svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* No "i" (more info) button on the Catalog's pills */
+  .ingredient-pills ingredient-pill .pill-info {
+    display: none;
+  }
+
+  /* Status circle on the left of the name (it's on the right by default) */
+  .ingredient-pills ingredient-pill .pill-check {
+    order: -1;
+  }
+
+  /* Product box: a wrapping row of same-size cards that scrolls inside itself */
   .product-grid {
     flex: 1;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start; /* rows stay at the top instead of spreading out */
     gap: var(--space-md);
-    align-content: start;
+    min-height: 0;
+    margin: var(--space-lg); /* space between the box and the screen edges */
+    padding: var(--space-md);
+    border: 1.5px solid #c9b8b4; /* same color as the sidebar dividers */
+    border-radius: var(--radius-md);
+    overflow-y: auto;
   }
 </style>
