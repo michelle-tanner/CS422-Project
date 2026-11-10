@@ -118,9 +118,12 @@
     filterProducts();
   });
 
-  /* Selected filter state  */
-  const selectedFunctions = new Set();
-  const selectedConcerns  = new Set(); // concern keys e.g. "acne", "dryness"
+  /* Selected filter state: starts with the concerns and functions saved in localStorage
+     (selectedConcerns / selectedFunctions), so those boxes are already checked when the catalog opens.
+     Every checkbox change is saved back, so a refresh keeps the same boxes checked. */
+  const functionLabels    = new Set(functionsData.map(fn => fn.label));
+  const selectedFunctions = new Set(FilterLists.getSelectedFunctions().filter(f => functionLabels.has(f)));
+  const selectedConcerns  = new Set(FilterLists.getSelectedConcerns().filter(c => c in concernsData.concerns)); // e.g. "acne"
 
   /* Filter + render product grid */
   const grid = document.getElementById("product-grid");
@@ -238,12 +241,14 @@
   setupIngredientSearch({ inputId: "exclude-input", dropdownId: "exclude-dropdown", status: "x" });
 
   /* Accordion lists: one checkbox per option */
-  function buildSelectableList(containerEl, items) {
+  // `selected` = the Set holding the checked keys, so saved choices start checked
+  function buildSelectableList(containerEl, items, selected) {
     items.forEach(({ label, key, onSelect }) => {
       const li = document.createElement("li");
       const row = document.createElement("label"); // clicking the text also ticks the box
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
+      checkbox.checked = selected.has(key);
       const text = document.createElement("span");
       // <wbr> after each "/" lets "moisturizer/humectant" wrap after the slash instead of mid-word
       label.split("/").forEach((part, i) => {
@@ -267,8 +272,12 @@
     Object.entries(concernsData.concerns).map(([key, c]) => ({
       label: c.label,
       key,
-      onSelect: (key, active) => active ? selectedConcerns.add(key) : selectedConcerns.delete(key),
-    }))
+      onSelect: (key, active) => {
+        active ? selectedConcerns.add(key) : selectedConcerns.delete(key);
+        FilterLists.setSelectedConcerns(selectedConcerns);
+      },
+    })),
+    selectedConcerns
   );
 
   buildSelectableList(
@@ -276,9 +285,17 @@
     functionsData.map(fn => ({
       label: fn.label,
       key:   fn.label,
-      onSelect: (key, active) => active ? selectedFunctions.add(key) : selectedFunctions.delete(key),
-    }))
+      onSelect: (key, active) => {
+        active ? selectedFunctions.add(key) : selectedFunctions.delete(key);
+        FilterLists.setSelectedFunctions(selectedFunctions);
+      },
+    })),
+    selectedFunctions
   );
+
+  // Open the Concerns / Functions sections that already have a box checked, so the user sees why
+  if (selectedConcerns.size)  document.getElementById("concerns-accordion").open = true;
+  if (selectedFunctions.size) document.getElementById("functions-accordion").open = true;
 </script>
 
 <style>

@@ -24,6 +24,12 @@ class MyDropdown extends HTMLElement {
   connectedCallback() {
     this.render();
     this.addEventListener("click", (event) => {
+      // "Explore products": remember this function so the catalog starts with it checked
+      if (event.target.closest(".explore-btn")) {
+        FilterLists.setSelectedFunction(this.getAttribute("function-label") || "");
+        return; // the link then opens the catalog as usual
+      }
+
       const more = event.target.closest(".more-ingredients");
       if (more) {
         const list = this.querySelector(".ingredients");
