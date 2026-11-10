@@ -5,10 +5,10 @@
 
 :root {
   /* ---- Pill Colors ---- */
-  --pill-default: #54BBE4;
-  --pill-good: #6DD294;
-  --pill-moderate: #E4AD54;
-  --pill-bad: #E45456;
+  --pill-default: #87B9C5;
+  --pill-good: #74A694;
+  --pill-moderate: #F4936A;
+  --pill-bad: #C65F5E;
 
   /* Function Colors */
   --color-text-green: #509C8E;

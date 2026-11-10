@@ -25,7 +25,7 @@
   <main>
     <!-- TOP: image + TEXT -->
     <section class="top">
-      <img class="product-image" src="../images/product-placeholder.png" alt="Product image placeholder" />
+      <img class="product-image" alt="" />
 
       <!-- TEXT -->
       <div class="text">
@@ -37,32 +37,28 @@
       </div>
     </section>
 
+    <!-- "Ingredients Overview" heading + a line across both columns below it -->
+    <div class="ingredients-heading">
+      <h2>Ingredients Overview</h2>
+      <hr />
+    </div>
+
     <!-- INGREDIENTS: OVERVIEW + KEY -->
     <section class="ingredients">
 
-      <!-- OVERVIEW: "Ingredients Overview" + line + overview content -->
+      <!-- OVERVIEW: one pill per ingredient -->
       <div class="overview">
-        <!-- Heading on the left, toggle on the right -->
-        <div class="section">
-          <h2>Ingredients Overview</h2>
-
-          <!-- role="switch" + aria-checked tell screen readers it's on/off.
-               What it toggles is TBD; the script below just flips it. -->
-          <button type="button" class="toggle" role="switch" aria-checked="false"
-                  aria-label="Toggle (TBD)"></button>
+        <!-- OVERVIEW_INGREDIENTS: filled with one pill per ingredient by the script below -->
+        <div class="overview-ingredients">
+          <p>Overview placeholder (TBD)</p>
         </div>
-        <hr />
-        <p>Overview placeholder (TBD)</p>
       </div>
 
-      <!-- KEY: "Key Ingredients" + line + KEY_INGREDIENTS -->
+      <!-- KEY: details of the clicked ingredient -->
       <div class="key">
-        <h2>Key Ingredients</h2>
-        <hr />
-
-        <!-- KEY_INGREDIENTS -->
-        <div class="key-ingredients">
-          <p>Key ingredients placeholder (TBD)</p>
+        <!-- KEY_INGREDIENTS: details of the ingredient pill clicked in the overview (filled by the script below) -->
+        <div class="key-ingredients" aria-live="polite">
+          <p class="not-available">Click an ingredient to learn more.</p>
         </div>
       </div>
 
@@ -74,8 +70,6 @@
   <div class="bubble-anchor">
     <img class="bubble bubble-bottom" src="../img/bubble2.png" alt="" />
   </div>
-
-  <my-footer></my-footer>
 
 </body>
 </html>
@@ -91,6 +85,7 @@
       width: 450px;
       height: 450px;
       flex-shrink: 0; /* don't let the text squeeze it */
+      object-fit: cover; /* photo fills the whole square at its own shape: never stretched, edges cropped */
       background-color: var(--color-surface);
       border: 1px solid var(--color-border-dark);
     }
@@ -103,10 +98,14 @@
     }
 
     /* INGREDIENTS: OVERVIEW + KEY */
+    /* Heading row + line above both columns */
+    .ingredients-heading {
+      margin-top: var(--space-xl);
+    }
+
     .ingredients {
       display: flex;
       gap: var(--space-xl);
-      margin-top: var(--space-xl);
     }
 
     /* Each side takes half the row */
@@ -122,101 +121,311 @@
       flex-direction: column;
     }
 
-    .overview h2,
-    .key h2 {
-      margin: 0 0 var(--space-sm); /* sit the line right under the heading */
+    /* KEY stays on screen while the (long) ingredient overview scrolls, so a clicked pill's
+       details are always visible right next to it */
+    .key {
+      position: sticky;
+      top: var(--space-md);
+      align-self: flex-start; /* only as tall as its content, so it has room to stick */
     }
 
-    .overview hr,
-    .key hr {
+    /* The line spans the full width, under both columns */
+    .ingredients-heading hr {
       width: 100%;
-      margin: 0 0 var(--space-md);
+      margin: 0 0 var(--space-xl); /* 32px below the line: the old 16px + 16px more */
       border: none;
       border-top: 2px solid rgba(0, 0, 0, 0.50);
     }
 
-    /* Heading + toggle row: pushed to opposite ends */
-    .section {
+    .ingredients-heading h2 {
+      margin: 0 0 var(--space-sm); /* same 8px gap above the line as before */
+    }
+
+    /* Ingredient pills wrap onto as many rows as they need */
+    .overview-ingredients {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-sm); /* the gap above the line moves here... */
+      flex-wrap: wrap;
+      gap: var(--space-sm);
     }
 
-    .section h2 {
-      margin: 0; /* ...so the toggle centers on the heading text exactly */
+    /* Product page pills: just the name on a color for its rating. No "i" button and no
+       include/exclude circle here (pill.js still shows them on other pages). */
+    .overview-ingredients ingredient-pill .pill-info,
+    .overview-ingredients ingredient-pill .pill-check {
+      display: none;
     }
 
-    /* Toggle: a pill track with a round knob (the ::before) */
-    .toggle {
-      position: relative;
-      width: 48px;
-      height: 26px;
-      padding: 0;
-      border: none;
-      border-radius: var(--radius-pill);
-      background-color: rgba(0, 0, 0, 0.25);
+    /* Size and padding stay pill.js's defaults */
+    .overview-ingredients ingredient-pill {
+      box-shadow: none;
+      color: var(--color-text-white);
       cursor: pointer;
     }
 
-    .toggle::before {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background-color: var(--color-surface);
-      transition: left 0.2s;
+    .overview-ingredients ingredient-pill:hover {
+      opacity: 0.85;
     }
 
-    /* On: accent track, knob slides right */
-    .toggle[aria-checked="true"] {
-      background-color: var(--color-accent);
+    /* The pill whose details are showing in Key Ingredients */
+    .overview-ingredients ingredient-pill[aria-pressed="true"] {
+      box-shadow: 0 0 0 2px var(--color-text); /* a ring drawn outside the pill, so its size doesn't change */
     }
 
-    .toggle[aria-checked="true"]::before {
-      left: 25px;
+    .overview-ingredients ingredient-pill:focus-visible {
+      outline: 2px solid var(--color-text);
+      outline-offset: 2px;
+    }
+
+    /* Pill colors by rating (also used for the rating pill in Key Ingredients) */
+    .rating-safe { background-color: var(--pill-good); }            /* Safe: green */
+    .rating-low  { background-color: var(--pill-default); }         /* Safe (in low %): default blue */
+    .rating-risk { background-color: var(--pill-moderate); }        /* Moderate Risk: orange */
+    .rating-bad  { background-color: var(--pill-bad); }             /* Bad: red */
+    .rating-none { background-color: var(--color-function-gray); }  /* no rating: gray */
+
+    /* KEY INGREDIENTS: name, then functions + rating in a row, then the description */
+    .detail-name {
+      margin: 0 0 var(--space-sm);
+      font-size: var(--font-size-xl);
+      text-transform: capitalize;
+      text-align: center;
+    }
+
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center; /* functions + rating pill centered left-to-right */
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .detail-functions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center; /* wrapped rows of functions stay centered too */
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* Functions are plain text, separated by commas: "emollient, soothing" */
+    .detail-functions li {
+      font-size: var(--font-size-base); /* same as the ingredient pills */
+      color: var(--color-text);
+    }
+
+    .detail-functions li:not(:last-child)::after {
+      content: ",";
+      margin-right: 0.3em; /* the space after the comma */
+    }
+
+    /* Safe / Neutral / Icky */
+    /* Same size as the overview's ingredient pills (pill.js defaults) */
+    .rating-pill {
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-pill);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+      color: var(--color-text-white);
+    }
+
+    .detail-desc {
+      margin: 0;
+      font-size: var(--font-size-base); /* index.css has no --font-size-md; base (16px) sits between sm and lg */
+    }
+
+    /* "[information] not available" messages: muted and italic so they read as missing data */
+    .not-available {
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+
+    .overview-ingredients .not-available,
+    .key-ingredients > .not-available {
+      margin: 0;
+    }
+
+    /* No photo: same box as the image, with the message centered */
+    .product-image.no-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
     }
   </style>
 
-  <script>
-    document.querySelector(".toggle").addEventListener("click", (event) => {
-      const toggle = event.currentTarget;
-      const isOn = toggle.getAttribute("aria-checked") === "true";
-      toggle.setAttribute("aria-checked", String(!isOn));
-    });
-  </script>
-
   <script type="module">
-    const name = new URLSearchParams(window.location.search).get("name");
-    if (!name) return;
+    // Fills the page's placeholders with the product named in the URL (product.html?name=...),
+    // using data/products.json. Anything the data doesn't have shows "[information] not available".
 
-    const products = await fetch("../data/products.json").then(r => r.json());
-    const product  = products.find(p => p.name === name);
-    if (!product) return;
+    // Empty strings, empty lists and missing fields all count as "not available"
+    const hasValue = (value) => Array.isArray(value) ? value.length > 0 : Boolean(value && String(value).trim());
 
-    document.title = `${product.name} — MySkindex`;
-
-    if (product.image) {
-      const img = document.querySelector(".product-image");
-      img.src = product.image;
-      img.alt = product.name;
+    // Puts the value in the element, or a muted "<what> not available" message
+    function fill(selector, value, what) {
+      const el = document.querySelector(selector);
+      el.classList.toggle("not-available", !hasValue(value));
+      el.textContent = hasValue(value) ? value : `${what} not available`;
     }
 
-    document.querySelector(".product-name").textContent = product.name;
-    document.querySelector(".product-type").textContent = product.type ?? "";
-    document.querySelector(".description").textContent  = product.desc ?? "";
+    // Swaps the <img> for a box with the message (no photo, or the photo failed to load)
+    function showNoImage(img) {
+      const box = document.createElement("div");
+      box.className = "product-image no-image not-available";
+      box.textContent = "Image not available";
+      img.replaceWith(box);
+    }
 
-    // Key ingredients: render each as a pill
-    const keyEl = document.querySelector(".key-ingredients");
-    if (product.ingreds?.length) {
-      keyEl.innerHTML = "";
-      product.ingreds.forEach(name => {
+    // Pill color from the ingredient's rating in ingredients.json:
+    // Safe = green, Safe (in low %) = default blue, Moderate Risk = orange, Bad = red, no rating = gray
+    // ("Bad" isn't in ingredients.json yet; it's ready for when ingredients get that rating.)
+    const RATING_CLASSES = {
+      "Safe": "rating-safe",
+      "Safe (in low %)": "rating-low",
+      "Moderate Risk": "rating-risk",
+      "Bad": "rating-bad",
+    };
+    // What the rating pill in Key Ingredients says
+    const RATING_LABELS = {
+      "Safe": "Safe",
+      "Safe (in low %)": "Neutral",
+      "Moderate Risk": "Icky",
+      "Bad": "Bad",
+    };
+    let ingredientInfo = new Map(); // lowercase ingredient name -> its entry in ingredients.json
+
+    const findIngredient = (name) => ingredientInfo.get(name.trim().toLowerCase());
+
+    // A muted "<what> not available" element
+    function notAvailable(tag, what) {
+      const el = document.createElement(tag);
+      el.className = "not-available";
+      el.textContent = `${what} not available`;
+      return el;
+    }
+
+    // Key Ingredients side: the clicked ingredient's name, its functions + rating, and its description
+    function showIngredient(name) {
+      const info = findIngredient(name) || {}; // not in ingredients.json: everything says "not available"
+      const panel = document.querySelector(".key-ingredients");
+      panel.innerHTML = "";
+
+      const heading = document.createElement("h3");
+      heading.className = "detail-name";
+      heading.textContent = name;
+
+      // Functions (as a list) and the rating pill, side by side
+      const tags = document.createElement("div");
+      tags.className = "detail-tags";
+
+      if (hasValue(info.function)) {
+        const list = document.createElement("ul");
+        list.className = "detail-functions";
+        list.setAttribute("aria-label", "Functions");
+        info.function.forEach((fn) => {
+          const li = document.createElement("li");
+          li.textContent = fn;
+          list.appendChild(li);
+        });
+        tags.appendChild(list);
+      } else {
+        tags.appendChild(notAvailable("span", "Functions"));
+      }
+
+      if (RATING_LABELS[info.rating]) {
+        const rating = document.createElement("span");
+        rating.className = `rating-pill ${RATING_CLASSES[info.rating]}`;
+        rating.textContent = RATING_LABELS[info.rating];
+        tags.appendChild(rating);
+      } else {
+        tags.appendChild(notAvailable("span", "Rating"));
+      }
+
+      const desc = document.createElement("p");
+      desc.className = "detail-desc";
+      if (hasValue(info.description)) desc.textContent = info.description;
+      else desc.append(notAvailable("span", "Description"));
+
+      panel.append(heading, tags, desc);
+    }
+
+    // Overview: one pill per ingredient, colored by its rating. Each pill is a button that
+    // shows that ingredient in Key Ingredients.
+    function fillPills(selector, names, what) {
+      const el = document.querySelector(selector);
+      el.innerHTML = "";
+      if (!hasValue(names)) {
+        const p = document.createElement("p");
+        p.className = "not-available";
+        p.textContent = `${what} not available`;
+        el.appendChild(p);
+        return;
+      }
+      names.forEach((name) => {
         const pill = document.createElement("ingredient-pill");
         pill.setAttribute("label", name);
-        keyEl.appendChild(pill);
+        pill.classList.add(RATING_CLASSES[findIngredient(name)?.rating] || "rating-none");
+
+        // Acts as a button: clickable, reachable with Tab, and Enter/Space press it
+        pill.setAttribute("role", "button");
+        pill.setAttribute("tabindex", "0");
+        pill.setAttribute("aria-pressed", "false");
+        const select = () => {
+          el.querySelectorAll("ingredient-pill").forEach((p) => p.setAttribute("aria-pressed", "false"));
+          pill.setAttribute("aria-pressed", "true");
+          showIngredient(name);
+        };
+        pill.addEventListener("click", select);
+        pill.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault(); // Space would otherwise scroll the page
+            select();
+          }
+        });
+
+        el.appendChild(pill);
       });
     }
+
+    async function showProduct() {
+      const name = new URLSearchParams(window.location.search).get("name");
+      let product = null;
+      try {
+        const [products, ingredients] = await Promise.all([
+          fetch("../data/products.json").then((r) => r.json()),
+          fetch("../data/ingredients.json").then((r) => r.json()),
+        ]);
+        product = products.find((p) => p.name === name) || null;
+        ingredientInfo = new Map(ingredients.map((i) => [i.name.trim().toLowerCase(), i]));
+      } catch {
+        // couldn't load the data: falls through to "not found" below
+      }
+
+      if (product) document.title = `${product.name} — MySkindex`;
+      product = product || {}; // unknown product: every field shows "not available"
+
+      fill(".product-name", product.name, "Product");
+      // products.json has no brand or country fields yet, so these always say "not available"
+      fill(".brand", product.brand, "Brand");
+      fill(".country", product.country, "Country");
+      fill(".product-type", product.type, "Product type");
+      fill(".description", product.desc, "Description");
+
+      const img = document.querySelector(".product-image");
+      if (hasValue(product.image)) {
+        img.addEventListener("error", () => showNoImage(img), { once: true });
+        img.src = product.image;
+        img.alt = product.name;
+      } else {
+        showNoImage(img);
+      }
+
+      // Overview: every ingredient in the product, in label order. Key Ingredients waits for a click.
+      fillPills(".overview-ingredients", product.ingreds, "Ingredients");
+    }
+
+    showProduct();
   </script>
