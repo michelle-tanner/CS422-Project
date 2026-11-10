@@ -74,6 +74,34 @@
       "perfuming": "var(--color-function-red)",
     };
 
+    /* ---- Ingredient info popup ---- */
+    let activePopup = null;
+
+    function showIngredientPopup(anchor, ingred) {
+      // Remove any existing popup
+      if (activePopup) activePopup.remove();
+
+      const popup = document.createElement("div");
+      popup.className = "ingredient-popup";
+      popup.innerHTML = `
+        <strong class="popup-name">${ingred.name}</strong>
+        ${ingred.rating ? `<span class="popup-rating popup-rating--${ingred.rating === "Safe (in low %)" ? "safe-low" : ingred.rating.replace(/\s+/g,'-').toLowerCase()}">${ingred.rating}</span>` : ""}
+        <p class="popup-desc">${ingred.description || "No description available."}</p>
+      `;
+      document.body.appendChild(popup);
+      activePopup = popup;
+
+      // Position below the anchor button
+      const rect = anchor.getBoundingClientRect();
+      popup.style.top  = `${rect.bottom + window.scrollY + 8}px`;
+      popup.style.left = `${rect.left  + window.scrollX}px`;
+
+      // Close on outside click
+      setTimeout(() => {
+        document.addEventListener("click", () => { popup.remove(); activePopup = null; }, { once: true });
+      }, 0);
+    }
+
     let activeFunctions = [];
     let inactiveFunctions = [];
 
@@ -124,8 +152,18 @@
 
     // Waits for DOMContentLoaded because FilterLists comes from a deferred script.
     document.addEventListener("DOMContentLoaded", () => {
-      Promise.all([loadJson("../data/functions.json"), loadJson("../data/concerns.json")])
-        .then(([functions, { concerns }]) => {
+      Promise.all([loadJson("../data/functions.json"), loadJson("../data/concerns.json"), loadJson("../data/ingredients.json")])
+        .then(([functions, { concerns }, ingredientsData]) => {
+          // Build ingredient lookup map for the popup
+          const ingredientMap = new Map(ingredientsData.map(i => [i.name.toLowerCase(), i]));
+
+          // Show popup when the ⓘ button on any ingredient pill is clicked
+          document.addEventListener("pill-info", (e) => {
+            const label   = e.detail.label || "";
+            const ingred  = ingredientMap.get(label.trim().toLowerCase());
+            showIngredientPopup(e.target, ingred || { name: label, description: "No information available." });
+          });
+
           const concern = concerns[FilterLists.getSelectedConcern()];
           activeFunctions = concern ? getConcernFunctions(functions, concern) : getDefaultFunctions(functions);
 
@@ -248,5 +286,47 @@
   /* keyboard tabbing */
   .toggle-side:focus-visible {
     outline: 2px solid var(--color-border-dark);
+  }
+
+  /* ---- Ingredient info popup ---- */
+  .ingredient-popup {
+    position: absolute;
+    z-index: 1000;
+    max-width: 260px;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(44, 39, 34, 0.15);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .popup-name {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: capitalize;
+  }
+
+  .popup-rating {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .popup-rating--safe          { background: var(--color-function-green); }
+  .popup-rating--safe-low      { background: var(--color-function-blue);  }
+  .popup-rating--moderate-risk { background: var(--color-function-red);   }
+
+  .popup-desc {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    line-height: 1.5;
   }
 </style>

@@ -51,12 +51,14 @@ class MyBreadcrumb extends HTMLElement {
       </nav>
 
       <style>
-        /* breadcrumb bar: lines up with the logo in the header */
+        /* breadcrumb bar: full-width strip below the header */
         my-breadcrumb {
           display: block;
-          padding: var(--space-md) var(--space-xl) 0;
+          width: 100%;
+          padding: var(--space-md) var(--space-xl);
           font-family: var(--font-base);
           font-size: var(--font-size-sm);
+          background-color: #F4EEEC;
         }
 
         /* row of items */

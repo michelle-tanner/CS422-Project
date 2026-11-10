@@ -14,28 +14,31 @@
 <body class="main-scroll">
 
   <my-header></my-header>
+  <my-breadcrumb current="product"></my-breadcrumb>
 
   <main>
     <div class="product-layout">
 
-      <!-- LEFT: image + ingredients overview -->
-      <div class="left-col">
+      <!-- TOP: image + product info side by side -->
+      <div class="top-row">
         <img class="product-image" src="" alt="" />
+        <div class="product-info">
+          <p class="product-type"></p>
+          <h1 class="product-name"></h1>
+          <p class="description"></p>
+        </div>
+      </div>
 
+      <hr class="section-divider" />
+
+      <!-- BOTTOM: ingredients overview (left) + detail panel (right) -->
+      <div class="bottom-row">
         <div class="ingredients-overview">
           <h2 class="section-heading">Ingredients Overview</h2>
           <div class="overview-pills" id="overview-pills"></div>
         </div>
-      </div>
 
-      <!-- RIGHT: product info + ingredient detail panel -->
-      <div class="right-col">
-        <div class="product-info">
-          <p class="product-type"></p>
-          <h1 class="product-name"></h1>
-          <p class="price"></p>
-          <p class="description"></p>
-        </div>
+        <div class="vertical-divider"></div>
 
         <div class="ingredient-panel" id="ingredient-panel">
           <p class="panel-placeholder">Click on an ingredient to learn more!</p>
@@ -66,41 +69,47 @@
     // Build ingredient lookup map (lowercase name → ingredient data)
     const ingredientMap = new Map(ingredientsData.map(i => [i.name.toLowerCase(), i]));
 
-    /* ---- Populate product info ---- */
+    /* Populate product info */
     document.title = `${product.name} — MySkindex`;
     document.querySelector(".product-image").src = product.image || "";
     document.querySelector(".product-image").alt = product.name;
     document.querySelector(".product-name").textContent = product.name;
     document.querySelector(".product-type").textContent = product.type ?? "";
-    document.querySelector(".price").textContent        = product.price ?? "";
     document.querySelector(".description").textContent  = product.desc ?? "";
 
-    /* ---- Ingredient rating → pill color ---- */
+    /* Ingredient rating → pill color + display name */
     function ratingClass(rating) {
-      if (rating === "Safe")              return "pill-safe";
-      if (rating === "Safe (in low %)")   return "pill-moderate";
-      if (rating === "Moderate Risk")     return "pill-bad";
+      if (rating === "Safe")            return "pill-safe";
+      if (rating === "Safe (in low %)") return "pill-moderate";
+      if (rating === "Moderate Risk")   return "pill-bad";
       return "pill-unknown";
     }
 
-    /* ---- Ingredient detail panel ---- */
+    function ratingLabel(rating) {
+      if (rating === "Safe")            return "Safe";
+      if (rating === "Safe (in low %)") return "Neutral";
+      if (rating === "Moderate Risk")   return "Icky";
+      return "Unknown";
+    }
+
+    /* Ingredient detail panel */
     const panel = document.getElementById("ingredient-panel");
 
     function showIngredient(ingred) {
-      const rating = ingred.rating || "Unknown";
+      const rating = ingred.rating || "";
       panel.innerHTML = `
         <div class="panel-content">
           <h3 class="panel-name">${ingred.name}</h3>
           <div class="panel-functions">
             ${(ingred.function || []).map(f => `<span class="fn-tag">${f}</span>`).join("")}
           </div>
-          <span class="panel-rating ${ratingClass(rating)}">${rating}</span>
+          <span class="panel-rating ${ratingClass(rating)}">${ratingLabel(rating)}</span>
           <p class="panel-desc">${ingred.description || ""}</p>
         </div>
       `;
     }
 
-    /* ---- Render overview pills ---- */
+    /* Render overview pills */
     const overviewEl = document.getElementById("overview-pills");
     (product.ingreds || []).forEach(name => {
       const ingred = ingredientMap.get(name.toLowerCase());
@@ -128,70 +137,32 @@
 
   .product-layout {
     display: flex;
-    gap: var(--space-xl);
+    flex-direction: column;
+    gap: 0;
     max-width: var(--max-width);
     margin: 0 auto;
-    align-items: flex-start;
   }
 
-  /* ---- Left column ---- */
-  .left-col {
-    flex: 0 0 320px;
+  /* Top row: image + product info */
+  .top-row {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-xl);
+    align-items: flex-start;
+    padding-bottom: var(--space-xl);
   }
 
   .product-image {
-    width: 100%;
-    aspect-ratio: 3 / 4;
+    width: 280px;
+    height: 280px;
+    flex-shrink: 0;
     object-fit: cover;
     border-radius: var(--radius-md);
     background: var(--color-bg);
     display: block;
   }
 
-  .section-heading {
-    font-size: var(--font-size-lg);
-    font-weight: 700;
-    margin: 0 0 var(--space-sm);
-    color: var(--color-text);
-  }
-
-  .overview-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-  }
-
-  /* Overview pill buttons */
-  .overview-pill {
-    padding: 4px 12px;
-    border-radius: var(--radius-pill);
-    border: 2px solid transparent;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.15s, opacity 0.15s;
-  }
-
-  .overview-pill:hover   { opacity: 0.8; }
-  .overview-pill.active  { border-color: var(--color-text); }
-
-  .pill-safe     { background: var(--pill-good);     color: #fff; }
-  .pill-moderate { background: var(--pill-moderate); color: #fff; }
-  .pill-bad      { background: var(--pill-bad);      color: #fff; }
-  .pill-unknown  { background: var(--pill-default);  color: #fff; }
-
-  /* ---- Right column ---- */
-  .right-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xl);
-  }
-
   .product-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
@@ -212,12 +183,6 @@
     color: var(--color-text);
   }
 
-  .price {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: 700;
-    color: var(--color-text);
-  }
 
   .description {
     margin: var(--space-sm) 0 0;
@@ -225,13 +190,71 @@
     line-height: 1.6;
   }
 
-  /* ---- Ingredient detail panel ---- */
+  /* Horizontal divider between top and bottom */
+  .section-divider {
+    border: none;
+    border-top: 2px solid rgba(0, 0, 0, 0.15);
+    margin: 0;
+  }
+
+  /* Bottom row: ingredients overview + detail panel */
+  .bottom-row {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    padding-top: var(--space-xl);
+  }
+
+  .ingredients-overview {
+    flex: 1;
+    padding-right: var(--space-xl);
+  }
+
+  .section-heading {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    margin: 0 0 var(--space-md);
+    color: var(--color-text);
+  }
+
+  .overview-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  /* Overview pill buttons */
+  .overview-pill {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, opacity 0.15s;
+  }
+
+  .overview-pill:hover  { opacity: 0.8; }
+  .overview-pill.active { border-color: var(--color-text); }
+
+  .pill-safe     { background: var(--color-function-green); color: #fff; }
+  .pill-moderate { background: var(--color-function-blue);  color: #fff; }
+  .pill-bad      { background: var(--color-function-red);   color: #fff; }
+  .pill-unknown  { background: var(--color-function-gray);  color: #fff; }
+
+  /* Vertical divider between overview and detail panel */
+  .vertical-divider {
+    width: 2px;
+    align-self: stretch;
+    background: rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+  }
+
+  /* Ingredient detail panel */
   .ingredient-panel {
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    padding: var(--space-lg);
-    min-height: 180px;
+    flex: 0 0 300px;
+    padding: var(--space-lg) var(--space-lg) var(--space-lg) var(--space-xl);
+    min-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -239,7 +262,7 @@
 
   .panel-placeholder {
     color: var(--color-text-muted);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
     font-style: italic;
     text-align: center;
     margin: 0;
