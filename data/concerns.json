@@ -4,128 +4,128 @@
       "label": "Redness",
       "icon": "fa-fire",
       "description": "Skin redness (also called erythema) happens when tiny blood vessels near the surface of your skin get wider, so more blood flows there and the skin looks pink or red. You might have this concern if your cheeks, nose, or chin often look flushed, blotchy, or red, especially after washing your face, being in the heat, or using a new product.",
-      "gofor": [""],
-      "avoid": [""],
+      "gofor": ["soothing", "antioxidant"],
+      "avoid": ["perfuming", "abrasive/scrub", "astringent", "exfoliant"],
       "causes": ["Skin conditions: Rosacea, eczema, and psoriasis can leave red, itchy, or flaky patches", 
       "Product reactions: Your skin can react badly to soaps, fragrances, or harsh ingredients", 
       "Sun and weather: Sunburn, heat, wind, and big temperature changes", 
       "Rubbing or scrubbing: Scrubbing too hard or over-exfoliating irritates the skin"],
-      "thesehelp": [""]
+      "thesehelp": ["skin-identical ingredient", "moisturizer/humectant", "emollient", "sunscreen"]
     },
     "acne": {
       "label": "Acne",
       "icon": "fa-circle-dot",
       "description": "Acne is when pores get blocked and turn into pimples. That includes whiteheads, blackheads, red bumps, and sometimes painful lumps under the skin. You might have this concern if you regularly get breakouts on your face, chest, or back, and not just one pimple every now and then.",
-      "gofor": ["Salicylic Acid", "Benzoyl Peroxide", "Retinol", "Tea Tree Oil", "Niacinamide"],
-      "avoid": ["Coconut Oil", "Isopropyl Myristate", "Sodium Lauryl Sulfate", "Heavy Silicones"],
+      "gofor": ["anti-acne", "exfoliant", "antimicrobial/antibacterial"],
+      "avoid": ["abrasive/scrub", "perfuming", "surfactant/cleansing"],
       "causes": ["Extra oil: Your skin makes too much oil, and it gets stuck in pores", 
       "Dead skin buildup: Dead skin cells don’t shed properly and plug the pores", 
       "Bacteria: Germs that normally live on skin grow inside blocked pores and cause swelling", 
       "Hormones: Changes during puberty, periods, pregnancy, or stress can trigger breakouts", 
       "Pore-clogging products: Heavy makeup, oils, or hair products can block pores"],
-      "thesehelp": ["BHA Exfoliant", "Spot treatment", "Gel moisturizer", "Cleanser"]
+      "thesehelp": ["cell-communicating ingredient", "soothing", "absorbent/mattifier", "skin brightening"]
     },
     "antiAging": {
       "label": "Anti-aging",
       "icon": "fa-hourglass-half",
       "description": "Anti-aging isn’t a problem in itself. It means caring for the signs of skin getting older, like fine-lines, wrinkles, sagging, and loss of bounce. You might care about this if you notice lines around your eyes or mouth, or if your skin feels less firm than it used to.",
-      "gofor": ["Retinol", "Peptides", "Vitamin C", "Hyaluronic Acid", "Coenzyme Q10"],
-      "avoid": ["Alcohol Denat", "Harsh physical scrubs", "Drying sulfates"],
+      "gofor": ["antioxidant", "cell-communicating ingredient", "sunscreen"],
+      "avoid": ["abrasive/scrub", "perfuming", "astringent"],
       "causes": ["Natural aging: Your body makes less collagen, the protein that keeps skin firm and bouncy, as you get older", 
       "Sun exposure: UV rays from the sun are the biggest outside cause of early wrinkles", 
       "Smoking: It breaks down collagen and reduces blood flow to the skin", 
       "Repeated facial movements: Squinting, frowning, and smiling over the years form lines",
       "Lack of moisture: Dry skin makes fine lines look more noticeable"],
-      "thesehelp": ["Retinol serum", "Antioxidant", "Night cream", "Sunscreen"]
+      "thesehelp": ["moisturizer/humectant", "skin-identical ingredient", "emollient", "exfoliant"]
     },
     "dryness": {
       "label": "Dryness",
       "icon": "fa-droplet-slash",
       "description": "Dry skin means your skin doesn’t have enough moisture or oil to stay soft. You might have this concern if your skin often feels tight (especially after washing), looks flaky or rough, or feels itchy.",
-      "gofor": ["Ceramides", "Glycerin", "Hyaluronic Acid", "Squalane", "Shea Butter"],
-      "avoid": ["Salicylic Acid", "Alcohol Denat", "Sodium Lauryl Sulfate", "Witch Hazel"],
+      "gofor": ["moisturizer/humectant", "emollient", "skin-identical ingredient"],
+      "avoid": ["surfactant/cleansing", "astringent", "exfoliant", "absorbent/mattifier", "abrasive/scrub"],
       "causes": ["Weather: Cold air, low humidity, and wind pull moisture from your skin", 
       "Hot showers: Hot water strips away your skin’s natural oils", 
       "Harsh cleansers: Strong soaps remove too much oil", 
       "Not enough moisturizer: Skin loses water without something to lock it in", 
       "Genetics or age: Some people naturally have drier skin, and skin gets drier with age"],
-      "thesehelp": ["Rich cream moisturizer", "Hydrating toner", "Cleansing oil", "Face oil"]
+      "thesehelp": ["soothing", "antioxidant"]
     },
     "darkSpots": {
       "label": "Dark spots",
       "icon": "fa-sun",
       "description": "Dark spots (also called hyperpigmentation) are flat patches that are darker than the rest of your skin. They happen when your skin makes too much melanin, the natural pigment that gives skin its color. You might have this concern if you see brown, tan, or dark marks that stay around, such as spots left behind after a pimple heals.",
-      "gofor": ["Vitamin C", "Alpha Arbutin", "Kojic Acid", "Tranexamic Acid", "Licorice Root Extract"],
-      "avoid": ["Unprotected UV exposure", "Harsh picking of blemishes"],
+      "gofor": ["skin brightening", "sunscreen", "antioxidant"],
+      "avoid": ["perfuming", "abrasive/scrub"],
       "causes": ["Sun damage: Years of sun exposure can create “sun spots” or “age spots”", 
       "Leftover acne marks: Pimples can leave dark marks after they heal", 
       "Hormones: Pregnancy or birth control can cause patches called melasma", 
       "Skin injuries: Cuts, burns, bug bites, or picking at skin can leave dark marks"],
-      "thesehelp": ["Brightening serum", "Chemical peel", "Sunscreen", "Antioxidant"]
+      "thesehelp": ["exfoliant", "cell-communicating ingredient", "soothing"]
     },
     "cloggedPores": {
       "label": "Clogged pores",
       "icon": "fa-braille",
       "description": "Clogged pores happen when oil and dead skin get stuck inside the tiny openings in your skin. You might have this concern if you see blackheads (small dark dots, often on the nose), whiteheads, or tiny bumps that make your skin feel bumpy. Clogged pores aren’t always full-on acne, but they can turn into it.",
-      "gofor": ["Salicylic Acid", "Clay", "Retinol", "Glycolic Acid", "Niacinamide"],
-      "avoid": ["Comedogenic oils", "Heavy waxes", "Petrolatum"],
+      "gofor": ["exfoliant", "anti-acne", "absorbent/mattifier"],
+      "avoid": ["emollient", "abrasive/scrub"],
       "causes": ["Too much oil: Oily skin is more likely to get pores blocked",
       "Dead skin buildup: Skin that isn’t exfoliated can trap gunk in pores",
       "Heavy products: Thick creams, oils, or makeup can sit in pores",
       "Not washing properly: Leftover makeup, sweat, or dirt at the end of the day"],
-      "thesehelp": ["BHA Exfoliant", "Clay mask", "Cleanser", "Oil cleanser"]
+      "thesehelp": ["cell-communicating ingredient", "surfactant/cleansing", "antimicrobial/antibacterial"]
     },
     "texture": {
       "label": "Texture",
       "icon": "fa-hand-dots",
       "description": "Skin texture is how your skin feels and looks up close. “Texture problems” means it isn’t smooth. You might have this concern if your skin feels rough, bumpy, or uneven when you run your fingers over it, or if you see small bumps, enlarged pores, or acne scars.",
-      "gofor": ["Glycolic Acid", "Lactic Acid", "Retinol", "PHA", "Enzymes"],
-      "avoid": ["Rough walnut scrubs", "Drying alcohols"],
+      "gofor": ["exfoliant", "cell-communicating ingredient"],
+      "avoid": ["abrasive/scrub", "astringent"],
       "causes": ["Dead skin buildup: Old skin cells piling up make skin feel rough",
       "Acne scars: Past breakouts can leave dips or raised spots",
       "Clogged pores: Tiny blocked pores create little bumps",
       "Dryness: Dry, flaky skin feels rough",
       "Sun damage and aging: Over time, skin can become less smooth and even"],
-      "thesehelp": ["AHA Exfoliant", "Retinol serum", "Smoothing toner", "Enzyme peel"]
+      "thesehelp": ["moisturizer/humectant", "skin-identical ingredient", "antioxidant"]
     },
     "sensitiveSkin": {
       "label": "Sensitive skin",
       "icon": "fa-feather",
       "description": "Sensitive skin means your skin reacts easily to things that don’t bother most people. You might have this concern if your skin often stings, burns, itches, or turns red after using new products, or if lots of products “don’t agree” with you.",
-      "gofor": ["Allantoin", "Colloidal Oatmeal", "Ceramides", "Panthenol", "Centella Asiatica"],
-      "avoid": ["Fragrance", "Essential Oils", "Parabens", "Chemical sunscreens", "Glycolic Acid"],
+      "gofor": ["soothing", "skin-identical ingredient", "emollient"],
+      "avoid": ["perfuming", "exfoliant", "abrasive/scrub", "astringent", "surfactant/cleansing"],
       "causes": ["Weak skin barrier: Your skin’s outer protective layer is damaged and lets irritants in more easily",
       "Fragrance and harsh ingredients: Perfumes, alcohol, and strong acids are common triggers",
       "Skin conditions: Eczema, rosacea, and allergies make skin more reactive",
       "Overdoing it: Using too many products or exfoliating too often",
       "Weather: Cold, wind, and heat can set off reactions"],
-      "thesehelp": ["Barrier cream", "Soothing serum", "Hypoallergenic cleanser", "Mineral sunscreen"]
+      "thesehelp": ["moisturizer/humectant", "antioxidant"]
     },
     "dullness": {
       "label": "Dullness",
       "icon": "fa-cloud",
       "description": "Dull skin looks tired, flat, or gray instead of fresh and glowing. You might have this concern if your skin doesn’t seem to reflect light, looks uneven in color, or people often say you look tired even when you’re not.",
-      "gofor": ["Vitamin C", "Glycolic Acid", "Niacinamide", "Lactic Acid", "Fermented ingredients"],
-      "avoid": ["Alcohol Denat", "Heavy mattress-like foundations without hydration"],
+      "gofor": ["exfoliant", "skin brightening", "antioxidant"],
+      "avoid": ["astringent"],
       "causes": ["Dead skin buildup: A layer of old skin cells hides the fresher skin underneath",
       "Dehydration: Skin without enough water looks less plump and bright",
       "Lack of sleep: Poor sleep can make skin look pale and tired",
       "Sun damage: Over time, it makes skin tone uneven",
       "Smoking and stress: Both reduce blood flow and healthy color in the skin"],
-      "thesehelp": ["Brightening serum", "AHA Exfoliant", "Antioxidant", "Hydrating mist"]
+      "thesehelp": ["moisturizer/humectant", "cell-communicating ingredient", "skin-identical ingredient"]
     },
     "oiliness": {
       "label": "Oiliness",
       "icon": "fa-droplet",
       "description": "Oily skin means your skin makes more oil (called sebum) than it needs. You might have this concern if your face looks shiny or greasy a few hours after washing, especially on your forehead, nose, and chin (the “T-zone”), or if makeup tends to slide off.",
-      "gofor": ["Niacinamide", "Salicylic Acid", "Zinc PCA", "Green Tea Extract", "Clay"],
-      "avoid": ["Heavy mineral oil", "Coconut oil", "Aggressive stripping alcohols"],
+      "gofor": ["absorbent/mattifier", "astringent", "anti-acne"],
+      "avoid": ["emollient", "surfactant/cleansing"],
       "causes": ["Genetics: Some people are simply born with oilier skin",
       "Hormones: Puberty, periods, and stress can increase oil",
       "Hot, humid weather: Skin produces more oil in heat",
       "Over-washing: Stripping your skin too much can make it produce more oil to make up for it",
       "Heavy products: Thick or greasy products can add to the shine"],
-      "thesehelp": ["Mattifying moisturizer", "BHA Exfoliant", "Gel cleanser", "Clay mask"]
+      "thesehelp": ["exfoliant", "moisturizer/humectant", "soothing", "antioxidant"]
     }
   }
 }

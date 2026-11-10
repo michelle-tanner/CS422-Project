@@ -12,6 +12,9 @@
 // These attributes are filled in from the data we retrieve
 // (see renderFunctions() in pages/functions.html and data/functions.json).
 
+// How many pills to build when a dropdown first opens. The rest are built on "more ingredients".
+const INITIAL_PILL_COUNT = 30;
+
 class MyDropdown extends HTMLElement {
   static get observedAttributes() {
     return ["color", "function-label", "description", "ingredients"];
@@ -25,6 +28,7 @@ class MyDropdown extends HTMLElement {
       if (more) {
         const list = this.querySelector(".ingredients");
         const isExpanded = list.classList.toggle("is-expanded");
+        if (isExpanded) this.showPills(this.ingredientNames.length);
         more.setAttribute("aria-expanded", String(isExpanded));
         more.querySelector(".more-text").textContent = isExpanded ? "fewer ingredients" : "more ingredients";
         return;
@@ -38,6 +42,7 @@ class MyDropdown extends HTMLElement {
       content.hidden = isOpen;
       toggle.setAttribute("aria-expanded", String(!isOpen));
       this.classList.toggle("is-open", !isOpen);
+      if (!isOpen) this.showPills(INITIAL_PILL_COUNT);
     });
   }
 
@@ -52,6 +57,9 @@ class MyDropdown extends HTMLElement {
     const description = this.getAttribute("description") || "Function description goes here.";
     const ingredients = parseIngredients(this.getAttribute("ingredients"));
     const isOpen = this.classList.contains("is-open"); // keep it open if it was open
+
+    this.ingredientNames = ingredients.map(([name]) => name);
+    this.pillsShown = 0;
 
     this.style.setProperty("--dropdown-color", color);
 
@@ -68,11 +76,8 @@ class MyDropdown extends HTMLElement {
 
           <h3 class="ingredients-heading">Common Ingredients</h3>
           ${ingredients.length
-            ? `<div class="ingredients">
-                 ${ingredients
-                   .map(([name]) => `<ingredient-pill label="${escapeText(name)}"></ingredient-pill>`) // one pill per ingredient (needs pill.js)
-                   .join("")}
-               </div>
+            ? `<!-- Pills are added by showPills() when the dropdown opens, so closed dropdowns stay fast -->
+               <div class="ingredients"></div>
 
                <!-- Only shows when the pills don't fit on one line (see watchIngredients) -->
                <button type="button" class="more-ingredients" aria-expanded="false" hidden>
@@ -248,6 +253,20 @@ class MyDropdown extends HTMLElement {
     `;
 
     this.watchIngredients();
+    if (isOpen) this.showPills(INITIAL_PILL_COUNT);
+  }
+
+  // Adds pills until the first `count` ingredients have one (needs pill.js)
+  showPills(count) {
+    const list = this.querySelector(".ingredients");
+    if (!list || count <= this.pillsShown) return;
+
+    const newPills = this.ingredientNames
+      .slice(this.pillsShown, count)
+      .map((name) => `<ingredient-pill label="${escapeText(name)}"></ingredient-pill>`)
+      .join("");
+    list.insertAdjacentHTML("beforeend", newPills);
+    this.pillsShown = count;
   }
 
   watchIngredients() {
