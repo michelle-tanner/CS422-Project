@@ -15,208 +15,281 @@
 
   <my-header></my-header>
 
-  <!-- Decorative bubble, top right, just under the header -->
-  <div class="bubble-anchor">
-    <img class="bubble bubble-top" src="../img/bubble1.png" alt="" />
-  </div>
-
-  <my-breadcrumb current="product"></my-breadcrumb>
-
   <main>
-    <!-- TOP: image + TEXT -->
-    <section class="top">
-      <img class="product-image" src="../images/product-placeholder.png" alt="Product image placeholder" />
+    <div class="product-layout">
 
-      <!-- TEXT -->
-      <div class="text">
-        <p class="brand">Brand name</p>
-        <h1 class="product-name">Product name</h1>
-        <p class="country">Country</p>
-        <p class="product-type">Product type</p>
-        <p class="description">Product description placeholder.</p>
-      </div>
-    </section>
+      <!-- LEFT: image + ingredients overview -->
+      <div class="left-col">
+        <img class="product-image" src="" alt="" />
 
-    <!-- INGREDIENTS: OVERVIEW + KEY -->
-    <section class="ingredients">
-
-      <!-- OVERVIEW: "Ingredients Overview" + line + overview content -->
-      <div class="overview">
-        <!-- Heading on the left, toggle on the right -->
-        <div class="section">
-          <h2>Ingredients Overview</h2>
-
-          <!-- role="switch" + aria-checked tell screen readers it's on/off.
-               What it toggles is TBD; the script below just flips it. -->
-          <button type="button" class="toggle" role="switch" aria-checked="false"
-                  aria-label="Toggle (TBD)"></button>
-        </div>
-        <hr />
-        <p>Overview placeholder (TBD)</p>
-      </div>
-
-      <!-- KEY: "Key Ingredients" + line + KEY_INGREDIENTS -->
-      <div class="key">
-        <h2>Key Ingredients</h2>
-        <hr />
-
-        <!-- KEY_INGREDIENTS -->
-        <div class="key-ingredients">
-          <p>Key ingredients placeholder (TBD)</p>
+        <div class="ingredients-overview">
+          <h2 class="section-heading">Ingredients Overview</h2>
+          <div class="overview-pills" id="overview-pills"></div>
         </div>
       </div>
 
-    </section>
+      <!-- RIGHT: product info + ingredient detail panel -->
+      <div class="right-col">
+        <div class="product-info">
+          <p class="product-type"></p>
+          <h1 class="product-name"></h1>
+          <p class="price"></p>
+          <p class="description"></p>
+        </div>
 
+        <div class="ingredient-panel" id="ingredient-panel">
+          <p class="panel-placeholder">Click on an ingredient to learn more!</p>
+        </div>
+      </div>
+
+    </div>
   </main>
-
-  <!-- Decorative bubble, bottom left, just above the footer -->
-  <div class="bubble-anchor">
-    <img class="bubble bubble-bottom" src="../img/bubble2.png" alt="" />
-  </div>
 
   <my-footer></my-footer>
 
 </body>
 </html>
 
-  <style>
-    /* TOP: image + TEXT side by side */
-    .top {
-      display: flex;
-      gap: var(--space-3xl);
-    }
+<script type="module">
+  const productName = new URLSearchParams(window.location.search).get("name");
 
-    .product-image {
-      width: 450px;
-      height: 450px;
-      flex-shrink: 0; /* don't let the text squeeze it */
-      background-color: var(--color-surface);
-      border: 1px solid var(--color-border-dark);
-    }
+  if (productName) {
+    const [products, ingredientsData] = await Promise.all([
+      fetch("../data/products.json").then(r => r.json()),
+      fetch("../data/ingredients.json").then(r => r.json()),
+    ]);
 
-    /* TEXT: brand, product, country, type, description stacked */
-    .text {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
+    const product = products.find(p => p.name === productName);
 
-    /* INGREDIENTS: OVERVIEW + KEY */
-    .ingredients {
-      display: flex;
-      gap: var(--space-xl);
-      margin-top: var(--space-xl);
-    }
+    if (product) {
 
-    /* Each side takes half the row */
-    .overview,
-    .key {
-      flex: 1;
-    }
+    // Build ingredient lookup map (lowercase name → ingredient data)
+    const ingredientMap = new Map(ingredientsData.map(i => [i.name.toLowerCase(), i]));
 
-    /* OVERVIEW and KEY: heading + line + content stacked */
-    .overview,
-    .key {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .overview h2,
-    .key h2 {
-      margin: 0 0 var(--space-sm); /* sit the line right under the heading */
-    }
-
-    .overview hr,
-    .key hr {
-      width: 100%;
-      margin: 0 0 var(--space-md);
-      border: none;
-      border-top: 2px solid rgba(0, 0, 0, 0.50);
-    }
-
-    /* Heading + toggle row: pushed to opposite ends */
-    .section {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-sm); /* the gap above the line moves here... */
-    }
-
-    .section h2 {
-      margin: 0; /* ...so the toggle centers on the heading text exactly */
-    }
-
-    /* Toggle: a pill track with a round knob (the ::before) */
-    .toggle {
-      position: relative;
-      width: 48px;
-      height: 26px;
-      padding: 0;
-      border: none;
-      border-radius: var(--radius-pill);
-      background-color: rgba(0, 0, 0, 0.25);
-      cursor: pointer;
-    }
-
-    .toggle::before {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background-color: var(--color-surface);
-      transition: left 0.2s;
-    }
-
-    /* On: accent track, knob slides right */
-    .toggle[aria-checked="true"] {
-      background-color: var(--color-accent);
-    }
-
-    .toggle[aria-checked="true"]::before {
-      left: 25px;
-    }
-  </style>
-
-  <script>
-    document.querySelector(".toggle").addEventListener("click", (event) => {
-      const toggle = event.currentTarget;
-      const isOn = toggle.getAttribute("aria-checked") === "true";
-      toggle.setAttribute("aria-checked", String(!isOn));
-    });
-  </script>
-
-  <script type="module">
-    const name = new URLSearchParams(window.location.search).get("name");
-    if (!name) return;
-
-    const products = await fetch("../data/products.json").then(r => r.json());
-    const product  = products.find(p => p.name === name);
-    if (!product) return;
-
+    /* ---- Populate product info ---- */
     document.title = `${product.name} — MySkindex`;
-
-    if (product.image) {
-      const img = document.querySelector(".product-image");
-      img.src = product.image;
-      img.alt = product.name;
-    }
-
+    document.querySelector(".product-image").src = product.image || "";
+    document.querySelector(".product-image").alt = product.name;
     document.querySelector(".product-name").textContent = product.name;
     document.querySelector(".product-type").textContent = product.type ?? "";
+    document.querySelector(".price").textContent        = product.price ?? "";
     document.querySelector(".description").textContent  = product.desc ?? "";
 
-    // Key ingredients: render each as a pill
-    const keyEl = document.querySelector(".key-ingredients");
-    if (product.ingreds?.length) {
-      keyEl.innerHTML = "";
-      product.ingreds.forEach(name => {
-        const pill = document.createElement("ingredient-pill");
-        pill.setAttribute("label", name);
-        keyEl.appendChild(pill);
-      });
+    /* ---- Ingredient rating → pill color ---- */
+    function ratingClass(rating) {
+      if (rating === "Safe")              return "pill-safe";
+      if (rating === "Safe (in low %)")   return "pill-moderate";
+      if (rating === "Moderate Risk")     return "pill-bad";
+      return "pill-unknown";
     }
-  </script>
+
+    /* ---- Ingredient detail panel ---- */
+    const panel = document.getElementById("ingredient-panel");
+
+    function showIngredient(ingred) {
+      const rating = ingred.rating || "Unknown";
+      panel.innerHTML = `
+        <div class="panel-content">
+          <h3 class="panel-name">${ingred.name}</h3>
+          <div class="panel-functions">
+            ${(ingred.function || []).map(f => `<span class="fn-tag">${f}</span>`).join("")}
+          </div>
+          <span class="panel-rating ${ratingClass(rating)}">${rating}</span>
+          <p class="panel-desc">${ingred.description || ""}</p>
+        </div>
+      `;
+    }
+
+    /* ---- Render overview pills ---- */
+    const overviewEl = document.getElementById("overview-pills");
+    (product.ingreds || []).forEach(name => {
+      const ingred = ingredientMap.get(name.toLowerCase());
+      const rating = ingred?.rating || "";
+
+      const pill = document.createElement("button");
+      pill.type = "button";
+      pill.className = `overview-pill ${ratingClass(rating)}`;
+      pill.textContent = name;
+      pill.addEventListener("click", () => {
+        document.querySelectorAll(".overview-pill").forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        showIngredient(ingred || { name, rating: "", function: [], description: "No information available." });
+      });
+      overviewEl.appendChild(pill);
+    });
+    } // end if (product)
+  } // end if (productName)
+</script>
+
+<style>
+  main {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .product-layout {
+    display: flex;
+    gap: var(--space-xl);
+    max-width: var(--max-width);
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+
+  /* ---- Left column ---- */
+  .left-col {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .product-image {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    display: block;
+  }
+
+  .section-heading {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    margin: 0 0 var(--space-sm);
+    color: var(--color-text);
+  }
+
+  .overview-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  /* Overview pill buttons */
+  .overview-pill {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, opacity 0.15s;
+  }
+
+  .overview-pill:hover   { opacity: 0.8; }
+  .overview-pill.active  { border-color: var(--color-text); }
+
+  .pill-safe     { background: var(--pill-good);     color: #fff; }
+  .pill-moderate { background: var(--pill-moderate); color: #fff; }
+  .pill-bad      { background: var(--pill-bad);      color: #fff; }
+  .pill-unknown  { background: var(--pill-default);  color: #fff; }
+
+  /* ---- Right column ---- */
+  .right-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .product-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .product-type {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .product-name {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+  }
+
+  .price {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .description {
+    margin: var(--space-sm) 0 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  /* ---- Ingredient detail panel ---- */
+  .ingredient-panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-lg);
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-placeholder {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    font-style: italic;
+    text-align: center;
+    margin: 0;
+  }
+
+  .panel-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .panel-name {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    color: var(--color-text);
+    text-transform: capitalize;
+  }
+
+  .panel-functions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .fn-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text);
+    text-transform: capitalize;
+  }
+
+  .panel-rating {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: #fff;
+    align-self: flex-start;
+  }
+
+  .panel-desc {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+</style>
