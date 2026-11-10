@@ -16,20 +16,20 @@ class MyHeader extends HTMLElement {
 
       <style>
         my-header {
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          justify-content: space-between;
           gap: 1rem;
           padding: var(--space-md) var(--space-xl);
           background-color: var(--color-surface-alt);
           box-shadow: var(--shadow-md);
         }
-          
+
         my-header .logo {
           font-size: var(--font-size-2xl);
           font-weight: bolder;
           color: var(--color-text-light);
-          text-decoration: none; /* no link underline */
+          text-decoration: none;
         }
 
         /* Search bar: the icon sits on top of the input, on the left */
@@ -37,8 +37,7 @@ class MyHeader extends HTMLElement {
           position: relative;
           display: flex;
           align-items: center;
-          flex: 1;
-          max-width: 740px;
+          width: 480px;
         }
 
         my-header .search i {
