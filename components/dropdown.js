@@ -30,13 +30,16 @@ class MyDropdown extends HTMLElement {
         return; // the link then opens the catalog as usual
       }
 
-      const more = event.target.closest(".more-ingredients");
-      if (more) {
+      // Bottom "more/fewer ingredients" button, or the top "fewer ingredients" button
+      if (event.target.closest(".more-ingredients, .fewer-ingredients-top")) {
         const list = this.querySelector(".ingredients");
+        const more = this.querySelector(".more-ingredients");
+        const fewerTop = this.querySelector(".fewer-ingredients-top");
         const isExpanded = list.classList.toggle("is-expanded");
         if (isExpanded) this.showPills(this.ingredientNames.length);
         more.setAttribute("aria-expanded", String(isExpanded));
         more.querySelector(".more-text").textContent = isExpanded ? "fewer ingredients" : "more ingredients";
+        fewerTop.hidden = !isExpanded; // top button only shows while the list is expanded
         return;
       }
 
@@ -82,7 +85,13 @@ class MyDropdown extends HTMLElement {
 
           <h3 class="ingredients-heading">Common Ingredients</h3>
           ${ingredients.length
-            ? `<!-- Pills are added by showPills() when the dropdown opens, so closed dropdowns stay fast -->
+            ? `<!-- Only shows while the list is expanded, so you can collapse it without scrolling down -->
+               <button type="button" class="fewer-ingredients-top" aria-expanded="true" hidden>
+                 <span class="more-text">fewer ingredients</span>
+                 <span class="arrow" aria-hidden="true"></span>
+               </button>
+
+               <!-- Pills are added by showPills() when the dropdown opens, so closed dropdowns stay fast -->
                <div class="ingredients"></div>
 
                <!-- Only shows when the pills don't fit on one line (see watchIngredients) -->
@@ -227,8 +236,9 @@ class MyDropdown extends HTMLElement {
           max-height: none; /* show every line */
         }
 
-        /* "more ingredients" button */
-        function-dropdown .more-ingredients {
+        /* "more ingredients" button (bottom) and "fewer ingredients" button (top) */
+        function-dropdown .more-ingredients,
+        function-dropdown .fewer-ingredients-top {
           display: inline-flex;
           align-items: center;
           gap: var(--space-sm);
@@ -243,11 +253,17 @@ class MyDropdown extends HTMLElement {
           cursor: pointer;
         }
 
-        function-dropdown .more-ingredients[hidden] {
+        function-dropdown .fewer-ingredients-top {
+          margin-bottom: var(--space-md); /* space above the pills */
+        }
+
+        function-dropdown .more-ingredients[hidden],
+        function-dropdown .fewer-ingredients-top[hidden] {
           display: none;
         }
 
-        function-dropdown .more-ingredients[aria-expanded="true"] .arrow {
+        function-dropdown .more-ingredients[aria-expanded="true"] .arrow,
+        function-dropdown .fewer-ingredients-top .arrow {
           transform: rotate(180deg);
         }
 
