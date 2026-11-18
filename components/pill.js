@@ -174,9 +174,9 @@ class IngredientPill extends HTMLElement {
     const stateText = status === "check" ? "included" : status === "x" ? "excluded" : "not in a list";
     // Hint: the next click's result, shown as a tooltip on hover so the hidden "exclude" step can be found
     const nextHint =
-      status === "check" ? "Click to exclude" :
-      status === "x"     ? "Click to clear" :
-      "Click to include";
+      status === "check" ? "Click to exclude ingredient" :
+      status === "x"     ? "Click to clear ingredient" :
+      "Click to include ingredient";
     box.setAttribute("title", nextHint);
     box.setAttribute("aria-label", `${label}: ${stateText}. ${nextHint}.`);
   }
