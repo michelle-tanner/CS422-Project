@@ -31,7 +31,7 @@ class IngredientPill extends HTMLElement {
     this.hasClickListener = true;
 
     this.addEventListener("click", (event) => {
-      // circle: move to the next choice and save it to the shared lists
+      // square: move to the next choice and save it to the shared lists
       if (event.target.closest(".pill-check")) {
         const label = this.getAttribute("label") || "";
         const current = FilterLists.getStatus(label);
@@ -87,9 +87,9 @@ class IngredientPill extends HTMLElement {
           color: var(--color-text-muted);
         }
 
-        /* status button: the circle and icon are one SVG, so they always stay lined up */
+        /* status button: the square and icon are one SVG, so they always stay lined up */
         ingredient-pill .pill-check {
-          flex: none; /* never squeeze the circle into an oval */
+          flex: none; /* never squeeze the square into a rectangle */
           width: 18px;
           height: 18px;
         }
@@ -101,14 +101,14 @@ class IngredientPill extends HTMLElement {
           overflow: visible;
         }
 
-        /* default: empty circle with a muted outline */
-        ingredient-pill .pill-check circle {
+        /* default: empty square with a muted outline */
+        ingredient-pill .pill-check rect {
           fill: none;
           stroke: var(--color-text-muted);
           stroke-width: 2;
         }
 
-        /* check or "x" inside the circle: white so it shows on the colored fill */
+        /* check or "x" inside the square: white so it shows on the colored fill */
         ingredient-pill .pill-check path {
           fill: none;
           stroke: var(--color-text-white);
@@ -117,14 +117,14 @@ class IngredientPill extends HTMLElement {
           stroke-linejoin: round;
         }
 
-        /* green circle with a check */
-        ingredient-pill[status="check"] .pill-check circle {
+        /* green square with a check */
+        ingredient-pill[status="check"] .pill-check rect {
           fill: var(--color-text-green);
           stroke: var(--color-text-green);
         }
 
-        /* red circle with an x */
-        ingredient-pill[status="x"] .pill-check circle {
+        /* red square with an x */
+        ingredient-pill[status="x"] .pill-check rect {
           fill: var(--color-text-red);
           stroke: var(--color-text-red);
         }
@@ -155,7 +155,7 @@ class IngredientPill extends HTMLElement {
     this.showStatus(FilterLists.getStatus(label));
   }
 
-  // Shows a choice ("", "check", or "x") in the circle. Only changes how the pill looks;
+  // Shows a choice ("", "check", or "x") in the square. Only changes how the pill looks;
   // saving the choice is done by FilterLists.setStatus.
   showStatus(status) {
     const label = this.getAttribute("label") || "Ingredient";
@@ -164,15 +164,21 @@ class IngredientPill extends HTMLElement {
     if (status) this.setAttribute("status", status);
     else this.removeAttribute("status");
 
-    // One SVG holds the circle and icon: a CSS border gets rounded to pixels separately from what's inside it
+    // One SVG holds the square and icon: a CSS border gets rounded to pixels separately from what's inside it
     const icon =
       status === "check" ? `<path d="M5.5 9.2 8 11.5 12.5 6.5"/>` :
       status === "x"     ? `<path d="M6 6 12 12M12 6 6 12"/>` :
       "";
-    box.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8"/>${icon}</svg>`;
+    box.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3"/>${icon}</svg>`;
 
     const stateText = status === "check" ? "included" : status === "x" ? "excluded" : "not in a list";
-    box.setAttribute("aria-label", `${label}: ${stateText}. Click to change.`);
+    // Hint: the next click's result, shown as a tooltip on hover so the hidden "exclude" step can be found
+    const nextHint =
+      status === "check" ? "Click to exclude" :
+      status === "x"     ? "Click to clear" :
+      "Click to include";
+    box.setAttribute("title", nextHint);
+    box.setAttribute("aria-label", `${label}: ${stateText}. ${nextHint}.`);
   }
 }
 

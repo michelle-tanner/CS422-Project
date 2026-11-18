@@ -103,8 +103,8 @@ class MyDropdown extends HTMLElement {
           </div>
 
           <a class="explore-btn" href="catalog.html?function=${encodeURIComponent(label)}">
-            <span>Explore products</span>
-            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            <span>Explore products for ${escapeText(label)}</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
           </a>
         </div>
       </div>
@@ -176,21 +176,25 @@ class MyDropdown extends HTMLElement {
         }
 
         /* Explore button: same as the one in the home page's info panel */
+        /* Outlined button; fills in on hover */
         function-dropdown .explore-btn {
           display: flex;
           align-items: center;
-          gap: var(--space-md);
+          gap: var(--space-sm);
           align-self: flex-end; /* right side */
-          padding: var(--space-sm) var(--space-md);
-          border-radius: var(--radius-md);
+          padding: var(--space-sm) var(--space-lg);
+          border-radius: var(--radius-pill);
+          border: 2px solid var(--color-border-dark);
+          background-color: transparent;
           color: var(--color-border-dark);
-          font-size: var(--font-size-xl);
           font-weight: 700;
-          text-decoration: none; 
+          text-decoration: none; /* no underline on the link */
+          cursor: pointer;
+          transition: background-color 0.15s, color 0.15s;
         }
 
         function-dropdown .explore-btn i {
-          font-size: var(--font-size-2xl);
+          font-size: var(--font-size-base);
         }
 
         function-dropdown .explore-btn span {
@@ -199,7 +203,13 @@ class MyDropdown extends HTMLElement {
 
         function-dropdown .explore-btn:hover,
         function-dropdown .explore-btn:focus-visible {
-          background-color: var(--color-surface);
+          background-color: var(--color-border-dark);
+          color: var(--color-text-light);
+        }
+
+        function-dropdown .explore-btn:focus-visible {
+          outline: 3px solid var(--color-accent);
+          outline-offset: 2px;
         }
 
         function-dropdown .dropdown-content[hidden] {

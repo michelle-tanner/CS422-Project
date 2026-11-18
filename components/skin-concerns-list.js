@@ -209,21 +209,25 @@ class SkinConcernsList extends HTMLElement {
           flex: 1;
         }
 
+        /* Outlined button; fills in on hover */
         skin-concerns-list .explore-btn {
           display: flex;
           align-items: center;
-          gap: var(--space-md);
-          align-self: flex-end; 
-          padding: var(--space-sm) var(--space-md);
-          border-radius: var(--radius-md);
+          gap: var(--space-sm);
+          align-self: flex-end; /* right side */
+          padding: var(--space-sm) var(--space-lg);
+          border-radius: var(--radius-pill);
+          border: 2px solid var(--color-border-dark);
+          background-color: transparent;
           color: var(--color-border-dark);
-          font-size: var(--font-size-xl);
           font-weight: 700;
           text-decoration: none; /* no underline on the link */
+          cursor: pointer;
+          transition: background-color 0.15s, color 0.15s;
         }
 
         skin-concerns-list .explore-btn i {
-          font-size: var(--font-size-2xl);
+          font-size: var(--font-size-base);
         }
 
         skin-concerns-list .explore-btn span {
@@ -232,7 +236,13 @@ class SkinConcernsList extends HTMLElement {
 
         skin-concerns-list .explore-btn:hover,
         skin-concerns-list .explore-btn:focus-visible {
-          background-color: var(--color-bg);
+          background-color: var(--color-border-dark);
+          color: var(--color-text-light);
+        }
+
+        skin-concerns-list .explore-btn:focus-visible {
+          outline: 3px solid var(--color-accent);
+          outline-offset: 2px;
         }
 
         /* concern title */ 
@@ -368,8 +378,8 @@ class SkinConcernsList extends HTMLElement {
         <!-- A link (not a <button>) because it goes to another page.
              Clicking it saves the concern with FilterLists (see the click listener above). -->
         <a class="explore-btn" href="functions.html">
-          <span>Explore functions</span>
-          <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+          <span>Explore functions for ${escapeHtml(concern.label)}</span>
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
           
         </a>
       </div>
