@@ -5,8 +5,9 @@
 //   ></ingredient-pill>
 //
 // These attributes are filled in from the data we retrieve.
-
-const PILL_STATUSES = ["", "check", "x"];
+//
+// The pill has two separate buttons: include (check) and exclude (x).
+// Clicking an inactive button sets that status. Clicking the already-active button clears it.
 
 class IngredientPill extends HTMLElement {
   static get observedAttributes() {
@@ -31,12 +32,14 @@ class IngredientPill extends HTMLElement {
     this.hasClickListener = true;
 
     this.addEventListener("click", (event) => {
-      // square: move to the next choice and save it to the shared lists
-      if (event.target.closest(".pill-check")) {
-        const label = this.getAttribute("label") || "";
+      const label = this.getAttribute("label") || "";
+
+      // include / exclude buttons: set that status directly, or clear it if it's already active
+      const statusButton = event.target.closest(".pill-check, .pill-x");
+      if (statusButton) {
+        const clicked = statusButton.classList.contains("pill-check") ? "check" : "x";
         const current = FilterLists.getStatus(label);
-        const next = PILL_STATUSES[(PILL_STATUSES.indexOf(current) + 1) % PILL_STATUSES.length];
-        FilterLists.setStatus(label, next); // the change event then updates every matching pill
+        FilterLists.setStatus(label, current === clicked ? "" : clicked); // the change event then updates every matching pill
         return;
       }
 
@@ -70,7 +73,7 @@ class IngredientPill extends HTMLElement {
           white-space: nowrap;
         }
 
-        /* shared reset for the two buttons inside the pill */
+        /* shared reset for the buttons inside the pill */
         ingredient-pill button {
           display: flex;
           align-items: center;
@@ -87,46 +90,78 @@ class IngredientPill extends HTMLElement {
           color: var(--color-text-muted);
         }
 
-        /* status button: the square and icon are one SVG, so they always stay lined up */
-        ingredient-pill .pill-check {
+        /* the include and exclude buttons sit side by side */
+        ingredient-pill .pill-actions {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-xs);
+          margin-left: var(--space-xs);
+        }
+
+        /* each button: the square and icon are one SVG, so they always stay lined up */
+        ingredient-pill .pill-check,
+        ingredient-pill .pill-x {
           flex: none; /* never squeeze the square into a rectangle */
           width: 18px;
           height: 18px;
         }
 
-        ingredient-pill .pill-check svg {
+        ingredient-pill .pill-check svg,
+        ingredient-pill .pill-x svg {
           display: block;
           width: 18px;
           height: 18px;
           overflow: visible;
         }
 
-        /* default: empty square with a muted outline */
-        ingredient-pill .pill-check rect {
+        /* default: muted outline square with a muted icon, so each button shows what it does */
+        ingredient-pill .pill-check rect,
+        ingredient-pill .pill-x rect {
           fill: none;
           stroke: var(--color-text-muted);
           stroke-width: 2;
         }
 
-        /* check or "x" inside the square: white so it shows on the colored fill */
-        ingredient-pill .pill-check path {
+        ingredient-pill .pill-check path,
+        ingredient-pill .pill-x path {
           fill: none;
-          stroke: var(--color-text-white);
+          stroke: var(--color-text-muted);
           stroke-width: 2;
           stroke-linecap: round;
           stroke-linejoin: round;
         }
 
-        /* green square with a check */
+        /* hover hint on a button that isn't active yet */
+        ingredient-pill .pill-check[aria-pressed="false"]:hover rect {
+          stroke: var(--color-text-green);
+        }
+        ingredient-pill .pill-x[aria-pressed="false"]:hover rect {
+          stroke: var(--color-text-red);
+        }
+
+        /* included: green filled square, white check */
         ingredient-pill[status="check"] .pill-check rect {
           fill: var(--color-text-green);
           stroke: var(--color-text-green);
         }
+        ingredient-pill[status="check"] .pill-check path {
+          stroke: var(--color-text-white);
+        }
 
-        /* red square with an x */
-        ingredient-pill[status="x"] .pill-check rect {
+        /* excluded: red filled square, white x */
+        ingredient-pill[status="x"] .pill-x rect {
           fill: var(--color-text-red);
           stroke: var(--color-text-red);
+        }
+        ingredient-pill[status="x"] .pill-x path {
+          stroke: var(--color-text-white);
+        }
+
+        /* keyboard tabbing */
+        ingredient-pill button:focus-visible {
+          outline: 2px solid var(--color-border-dark);
+          outline-offset: 2px;
+          border-radius: 4px;
         }
       `;
       document.head.appendChild(style);
@@ -144,45 +179,54 @@ class IngredientPill extends HTMLElement {
   render() {
     const label = this.getAttribute("label") || "Ingredient";
 
+    // One SVG per button holds the square and its icon
     this.innerHTML = `
       <button type="button" class="pill-info" aria-label="More info about ${escapePillText(label)}">
         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
       </button>
       <span class="pill-label">${escapePillText(label)}</span>
-      <button type="button" class="pill-check"></button>
+      <span class="pill-actions">
+        <button type="button" class="pill-check">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3"/><path d="M5.5 9.2 8 11.5 12.5 6.5"/></svg>
+        </button>
+        <button type="button" class="pill-x">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3"/><path d="M6 6 12 12M12 6 6 12"/></svg>
+        </button>
+      </span>
     `;
 
     this.showStatus(FilterLists.getStatus(label));
   }
 
-  // Shows a choice ("", "check", or "x") in the square. Only changes how the pill looks;
+  // Shows a choice ("", "check", or "x") on the two buttons. Only changes how the pill looks;
   // saving the choice is done by FilterLists.setStatus.
   showStatus(status) {
     const label = this.getAttribute("label") || "Ingredient";
-    const box = this.querySelector(".pill-check");
+    const includeButton = this.querySelector(".pill-check");
+    const excludeButton = this.querySelector(".pill-x");
+    if (!includeButton || !excludeButton) return;
 
     if (status) this.setAttribute("status", status);
     else this.removeAttribute("status");
 
-    // One SVG holds the square and icon: a CSS border gets rounded to pixels separately from what's inside it
-    const icon =
-      status === "check" ? `<path d="M5.5 9.2 8 11.5 12.5 6.5"/>` :
-      status === "x"     ? `<path d="M6 6 12 12M12 6 6 12"/>` :
-      "";
-    box.innerHTML = `<svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3"/>${icon}</svg>`;
+    const included = status === "check";
+    const excluded = status === "x";
 
-    const stateText = status === "check" ? "included" : status === "x" ? "excluded" : "not in a list";
-    // Hint: the next click's result, shown as a tooltip on hover so the hidden "exclude" step can be found
-    const nextHint =
-      status === "check" ? "Click to exclude ingredient" :
-      status === "x"     ? "Click to clear ingredient" :
-      "Click to include ingredient";
-    box.setAttribute("title", nextHint);
-    box.setAttribute("aria-label", `${label}: ${stateText}. ${nextHint}.`);
+    includeButton.setAttribute("aria-pressed", String(included));
+    excludeButton.setAttribute("aria-pressed", String(excluded));
+
+    // Tooltips say what a click will do
+    const includeHint = included ? "Click to remove from included" : "Click to include ingredient";
+    const excludeHint = excluded ? "Click to remove from excluded" : "Click to exclude ingredient";
+
+    includeButton.setAttribute("title", includeHint);
+    includeButton.setAttribute("aria-label", `${label}: ${includeHint}.`);
+    excludeButton.setAttribute("title", excludeHint);
+    excludeButton.setAttribute("aria-label", `${label}: ${excludeHint}.`);
   }
 }
 
-// Makes text safe to put into innerHTML 
+// Makes text safe to put into innerHTML
 function escapePillText(text) {
   return String(text)
     .replaceAll("&", "&amp;")
