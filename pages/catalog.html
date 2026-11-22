@@ -176,10 +176,10 @@
       // Name must match the search query
       if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return false;
 
-      // Every selected include ingredient must appear in the product
-      if (includeIngreds.length && !includeIngreds.every(i => ingreds.includes(i))) return false;
+      // Include: the product needs AT LEAST ONE of the included ingredients (not all of them)
+      if (includeIngreds.length && !includeIngreds.some(i => ingreds.includes(i))) return false;
 
-      // No excluded ingredient may appear in the product
+      // Exclude: if the product has ANY excluded ingredient, it's hidden
       const excludeIngreds = FilterLists.getExclude().map(n => n.trim().toLowerCase());
       if (excludeIngreds.length && excludeIngreds.some(i => ingreds.includes(i))) return false;
 
