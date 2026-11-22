@@ -37,6 +37,11 @@
         const dropdown = document.createElement("function-dropdown");
         // setAttribute is safe: the text is never read as HTML
         dropdown.setAttribute("function-label", fn.label);
+        // The selected skin concern (if any), so the ingredients text can name it, e.g. "in Anti-Aging products"
+        if (selectedConcern && fn.group) {
+          dropdown.setAttribute("concern-label", selectedConcern.label);
+          dropdown.setAttribute("concern-group", fn.group); // gofor / thesehelp / avoid
+        }
         if (fn.color) dropdown.setAttribute("color", fn.color); // no color -> the dropdown uses gray
         dropdown.setAttribute("description", fn.description);
         dropdown.setAttribute("ingredients", JSON.stringify(fn.ingredients)); // attributes only hold text, so turn the list into JSON
@@ -76,6 +81,7 @@
 
     let activeFunctions = [];
     let inactiveFunctions = [];
+    let selectedConcern = null; // the concern object from concerns.json, or null when none is picked
 
     // Toggle: "Active functions" (left) shows activeFunctions, "Inactive functions" (right) shows inactiveFunctions.
     const toggle = document.querySelector(".function-toggle");
@@ -112,7 +118,7 @@
       return Object.entries(CONCERN_GROUP_COLORS).flatMap(([group, color]) =>
         functions
           .filter((fn) => concern[group].includes(fn.label))
-          .map((fn) => ({ ...fn, color }))
+          .map((fn) => ({ ...fn, color, group }))
       );
     }
 
@@ -127,6 +133,7 @@
       Promise.all([loadJson("../data/functions.json"), loadJson("../data/concerns.json")])
         .then(([functions, { concerns }]) => {
           const concern = concerns[FilterLists.getSelectedConcern()];
+          selectedConcern = concern || null;
           activeFunctions = concern ? getConcernFunctions(functions, concern) : getDefaultFunctions(functions);
 
           // Inactive = everything in functions.json that isn't active.
