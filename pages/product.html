@@ -151,7 +151,7 @@
     /* Product page pills: just the name on a color for its rating. No "i" button and no
        include/exclude circle here (pill.js still shows them on other pages). */
     .overview-ingredients ingredient-pill .pill-info,
-    .overview-ingredients ingredient-pill .pill-check {
+    .overview-ingredients ingredient-pill .pill-actions {
       display: none;
     }
 
@@ -237,6 +237,35 @@
       font-size: var(--font-size-base); /* index.css has no --font-size-md; base (16px) sits between sm and lg */
     }
 
+    /* Research links under the description */
+    .detail-research {
+      margin-top: var(--space-md);
+    }
+
+    .detail-research h4 {
+      margin: 0 0 var(--space-sm);
+      font-size: var(--font-size-base);
+    }
+
+    .research-list {
+      margin: 0;
+      padding-left: var(--space-lg);
+      font-size: var(--font-size-sm);
+    }
+
+    .research-list li + li {
+      margin-top: var(--space-sm);
+    }
+
+    .research-list a {
+      color: var(--color-text-blue);
+    }
+
+    .research-meta {
+      display: block;
+      color: var(--color-text-muted);
+    }
+
     /* "[information] not available" messages: muted and italic so they read as missing data */
     .not-available {
       color: var(--color-text-muted);
@@ -296,6 +325,7 @@
       "Bad": "Bad",
     };
     let ingredientInfo = new Map(); // lowercase ingredient name -> its entry in ingredients.json
+    let researchInfo = new Map();
 
     const findIngredient = (name) => ingredientInfo.get(name.trim().toLowerCase());
 
@@ -349,7 +379,42 @@
       if (hasValue(info.description)) desc.textContent = info.description;
       else desc.append(notAvailable("span", "Description"));
 
-      panel.append(heading, tags, desc);
+      // Research: up to three PubMed links under the description
+      const papers = researchInfo.get(name.trim().toLowerCase()) || [];
+      const research = document.createElement("div");
+      research.className = "detail-research";
+
+      const researchHeading = document.createElement("h4");
+      researchHeading.textContent = "Research";
+      research.appendChild(researchHeading);
+
+      if (papers.length) {
+        const list = document.createElement("ul");
+        list.className = "research-list";
+        papers.forEach((paper) => {
+          // only link to PubMed, in case the data file ever contains something unexpected
+          if (!paper.url || !paper.url.startsWith("https://pubmed.ncbi.nlm.nih.gov/")) return;
+          const li = document.createElement("li");
+
+          const link = document.createElement("a");
+          link.href = paper.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = paper.title;
+
+          const meta = document.createElement("span");
+          meta.className = "research-meta";
+          meta.textContent = [paper.journal, paper.year].filter(Boolean).join(", ");
+
+          li.append(link, meta);
+          list.appendChild(li);
+        });
+        research.appendChild(list.children.length ? list : notAvailable("p", "Research"));
+      } else {
+        research.appendChild(notAvailable("p", "Research"));
+      }
+
+      panel.append(heading, tags, desc, research);
     }
 
     // Overview: one pill per ingredient, colored by its rating. Each pill is a button that
@@ -394,13 +459,15 @@
       const name = new URLSearchParams(window.location.search).get("name");
       let product = null;
       try {
-        const [products, ingredients] = await Promise.all([
+        const [products, ingredients, research] = await Promise.all([
           fetch("../data/products.json").then((r) => r.json()),
           fetch("../data/ingredients.json").then((r) => r.json()),
+          fetch("../data/research.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
         ]);
         product = products.find((p) => p.name === name) || null;
         ingredientInfo = new Map(ingredients.map((i) => [i.name.trim().toLowerCase(), i]));
-      } catch {
+        researchInfo = new Map(Object.entries(research).map(([k, v]) => [k.trim().toLowerCase(), v]));
+      }catch {
         // couldn't load the data: falls through to "not found" below
       }
 

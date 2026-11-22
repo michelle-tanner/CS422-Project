@@ -175,7 +175,9 @@
 
   filterProducts(); // first render, using any Include/Exclude choices already saved in localStorage
 
-  /* Render include / exclude pill sections from FilterLists */
+  /* Render include / exclude pill sections from FilterLists.
+     "removable" makes each pill show a single × button (clears it from the list)
+     instead of the include / exclude pair. */
   function renderPills() {
     const includePillsEl = document.getElementById("include-pills");
     const excludePillsEl = document.getElementById("exclude-pills");
@@ -184,6 +186,7 @@
     FilterLists.getInclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
+      pill.setAttribute("removable", "");
       includePillsEl.appendChild(pill);
     });
 
@@ -191,6 +194,7 @@
     FilterLists.getExclude().forEach(name => {
       const pill = document.createElement("ingredient-pill");
       pill.setAttribute("label", name);
+      pill.setAttribute("removable", "");
       excludePillsEl.appendChild(pill);
     });
   }
@@ -542,21 +546,20 @@
     gap: var(--space-xs); /* default: --space-sm */
   }
 
-  /* Smaller status circle: default is 18px */
-  .ingredient-pills ingredient-pill .pill-check,
-  .ingredient-pills ingredient-pill .pill-check svg {
+  /* Removable pills: a single × button, a bit smaller than the default (18px) */
+  .ingredient-pills ingredient-pill .pill-remove {
     width: 14px;
     height: 14px;
   }
 
-  /* No "i" (more info) button on the Catalog's pills */
-  .ingredient-pills ingredient-pill .pill-info {
-    display: none;
+  .ingredient-pills ingredient-pill .pill-remove svg {
+    width: 12px;
+    height: 12px;
   }
 
-  /* Status circle on the left of the name (it's on the right by default) */
-  .ingredient-pills ingredient-pill .pill-check {
-    order: -1;
+  /* No "i" (more info) button on the Catalog's pills (delete this rule to enable the info popup here) */
+  .ingredient-pills ingredient-pill .pill-info {
+    display: none;
   }
 
   /* Product box: a wrapping row of same-size cards that scrolls inside itself */
