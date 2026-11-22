@@ -15,7 +15,7 @@
 </head>
 <body class="main-scroll">
 
-  <my-header></my-header>
+  <my-header no-search></my-header>
   <my-breadcrumb current="catalog"></my-breadcrumb>
 
   <main>
@@ -23,29 +23,13 @@
 
       <!-- Sidebar -->
       <aside class="catalog-sidebar">
-        <!-- General -->
-        <div class="sidebar-block">
-          <h2 class="sidebar-heading">General</h2>
-          <hr class="sidebar-divider" />
-          <details class="sidebar-accordion" id="concerns-accordion">
-            <summary>Concerns</summary>
-            <ul class="accordion-list" id="concerns-list"></ul>
-          </details>
-          <hr class="sidebar-divider" />
-          <details class="sidebar-accordion" id="functions-accordion">
-            <summary>Functions</summary>
-            <ul class="accordion-list" id="functions-list"></ul>
-          </details>
-          <hr class="sidebar-divider" />
-          <div class="sidebar-search product-search">
-            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-            <input type="text" placeholder="search product" aria-label="Search product" />
-          </div>
-        </div>
+        <!-- Reminder of the chosen skin concern(s) and the functions that help them
+             (filled in by renderChoicesSummary()). It does NOT filter anything by itself. -->
+        <div class="sidebar-summary" id="choices-summary"></div>
 
         <!-- Include -->
         <div class="sidebar-block">
-          <h2 class="sidebar-heading">Include</h2>
+          <h2 class="sidebar-heading">Include Ingredients</h2>
           <hr class="sidebar-divider" />
           <div class="ingredient-search-wrap">
             <div class="sidebar-search include-search">
@@ -65,7 +49,7 @@
 
         <!-- Exclude -->
         <div class="sidebar-block">
-          <h2 class="sidebar-heading">Exclude</h2>
+          <h2 class="sidebar-heading">Exclude Ingredients</h2>
           <hr class="sidebar-divider" />
           <div class="ingredient-search-wrap">
             <div class="sidebar-search exclude-search">
@@ -84,8 +68,50 @@
         </div>
       </aside>
 
-      <!-- Product Grid -->
-      <section class="product-grid" id="product-grid"></section>
+      <!-- Drag to resize the sidebar (double-click to reset). Arrow keys work when focused. -->
+      <div
+        class="sidebar-resizer"
+        id="sidebar-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        tabindex="0"
+        title="Drag to resize, double-click to reset"
+      ></div>
+
+      <!-- Right side: filter bar on top, products underneath -->
+      <div class="catalog-main">
+
+        <!-- Filter bar: each filter is a dropdown button; more filters can be added here -->
+        <div class="filter-bar">
+          <!-- Left group: dropdown buttons, with the chosen-filter chips underneath -->
+          <div class="filter-bar-filters">
+          <div class="filter-buttons">
+          <details class="filter-dropdown" id="concerns-accordion">
+            <summary>Concerns <span class="filter-count" id="concerns-count" hidden></span></summary>
+            <ul class="accordion-list" id="concerns-list"></ul>
+          </details>
+          <details class="filter-dropdown" id="functions-accordion">
+            <summary>Functions <span class="filter-count" id="functions-count" hidden></span></summary>
+            <ul class="accordion-list" id="functions-list"></ul>
+          </details>
+          </div>
+
+          <!-- Chosen Concerns / Functions, each with an × to remove it without opening the dropdown.
+               Filled in by renderActiveFilters(); hidden while nothing is chosen. -->
+          <div class="active-filters" id="active-filters" hidden></div>
+          </div>
+
+          <!-- Right group: product search -->
+          <div class="sidebar-search product-search">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" placeholder="search product" aria-label="Search product" />
+          </div>
+        </div>
+
+        <!-- Product Grid -->
+        <section class="product-grid" id="product-grid"></section>
+      </div>
 
     </div>
   </main>
@@ -245,8 +271,10 @@
   setupIngredientSearch({ inputId: "exclude-input", dropdownId: "exclude-dropdown", status: "x" });
 
   /* Accordion lists: one checkbox per option */
-  // `selected` = the Set holding the checked keys, so saved choices start checked
+  // `selected` = the Set holding the checked keys, so saved choices start checked.
+  // Returns a Map of key -> { label, checkbox, onSelect } so the chips below can uncheck a box.
   function buildSelectableList(containerEl, items, selected) {
+    const options = new Map();
     items.forEach(({ label, key, onSelect }) => {
       const li = document.createElement("li");
       const row = document.createElement("label"); // clicking the text also ticks the box
@@ -263,15 +291,18 @@
       checkbox.addEventListener("change", () => {
         onSelect(key, checkbox.checked);
         filterProducts();
+        renderActiveFilters();
       });
 
       row.append(checkbox, text);
       li.appendChild(row);
       containerEl.appendChild(li);
+      options.set(key, { label, checkbox, onSelect });
     });
+    return options;
   }
 
-  buildSelectableList(
+  const concernOptions = buildSelectableList(
     document.getElementById("concerns-list"),
     Object.entries(concernsData.concerns).map(([key, c]) => ({
       label: c.label,
@@ -284,7 +315,7 @@
     selectedConcerns
   );
 
-  buildSelectableList(
+  const functionOptions = buildSelectableList(
     document.getElementById("functions-list"),
     functionsData.map(fn => ({
       label: fn.label,
@@ -297,9 +328,215 @@
     selectedFunctions
   );
 
-  // Open the Concerns / Functions sections that already have a box checked, so the user sees why
-  if (selectedConcerns.size)  document.getElementById("concerns-accordion").open = true;
-  if (selectedFunctions.size) document.getElementById("functions-accordion").open = true;
+  /* Chosen-filter chips: one per checked Concern / Function, with an × that unchecks it.
+     Also shows how many are chosen on each dropdown button, e.g. "Concerns (2)". */
+  const activeFiltersEl = document.getElementById("active-filters");
+
+  function renderActiveFilters() {
+    activeFiltersEl.innerHTML = "";
+
+    const groups = [
+      { selected: selectedConcerns,  options: concernOptions,  countEl: document.getElementById("concerns-count") },
+      { selected: selectedFunctions, options: functionOptions, countEl: document.getElementById("functions-count") },
+    ];
+
+    groups.forEach(({ selected, options, countEl }) => {
+      countEl.textContent = `(${selected.size})`;
+      countEl.hidden = selected.size === 0;
+
+      selected.forEach(key => {
+        const option = options.get(key);
+        if (!option) return;
+
+        const chip = document.createElement("span");
+        chip.className = "active-filter-chip";
+        chip.textContent = option.label;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "active-filter-remove";
+        remove.setAttribute("aria-label", `Remove ${option.label}`);
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          option.checkbox.checked = false; // keeps the dropdown's box in sync
+          option.onSelect(key, false);
+          filterProducts();
+          renderActiveFilters();
+        });
+
+        chip.appendChild(remove);
+        activeFiltersEl.appendChild(chip);
+      });
+    });
+
+    const total = selectedConcerns.size + selectedFunctions.size;
+    if (total > 1) {
+      const clearAll = document.createElement("button");
+      clearAll.type = "button";
+      clearAll.className = "active-filters-clear";
+      clearAll.textContent = "clear all";
+      clearAll.addEventListener("click", () => {
+        groups.forEach(({ selected, options }) => {
+          [...selected].forEach(key => {
+            const option = options.get(key);
+            option.checkbox.checked = false;
+            option.onSelect(key, false);
+          });
+        });
+        filterProducts();
+        renderActiveFilters();
+      });
+      activeFiltersEl.appendChild(clearAll);
+    }
+
+    activeFiltersEl.hidden = total === 0;
+    renderChoicesSummary();
+  }
+
+  /* Sidebar reminder: for each chosen skin concern, the functions that help it (the concern's "gofor" list).
+     This is only a reminder; the suggested functions are NOT applied to the results.
+     Each suggestion is a button that ticks/unticks that function in the Functions filter. */
+  const choicesSummaryEl = document.getElementById("choices-summary");
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function toggleFunction(key) {
+    const option = functionOptions.get(key);
+    if (!option) return;
+    option.checkbox.checked = !option.checkbox.checked;
+    option.onSelect(key, option.checkbox.checked);
+    filterProducts();
+    renderActiveFilters(); // also re-renders this reminder
+  }
+
+  function renderChoicesSummary() {
+    choicesSummaryEl.innerHTML = "";
+
+    if (!selectedConcerns.size) {
+      choicesSummaryEl.append(
+        el("h2", "choices-heading", "Discover products"),
+        el("p", "choices-note", "Choose a skin concern from the Concerns filter and we'll remind you which functions help with it.")
+      );
+      return;
+    }
+
+    // Heading, then one box of labeled rows:  SKIN CONCERN | Acne   /   HELPFUL FUNCTIONS | [pills]
+    choicesSummaryEl.append(
+      el("span", "choices-eyebrow", "Reminder"),
+      el("h2", "choices-heading", "Based on what you chose")
+    );
+
+    const box = el("dl", "choices-list");
+
+    selectedConcerns.forEach(key => {
+      const concern = concernsData.concerns[key];
+      const group = el("div", "choices-group"); // one concern + its functions
+
+      const concernEl = el("dd", "choices-concern", concern.label);
+      concernEl.title = concern.label; // full name on hover, in case it's cut off with "..."
+      group.append(el("dt", "", "Skin concern"), concernEl);
+
+      const helpers = (concern.gofor || []).filter(g => g && functionOptions.has(g));
+      if (helpers.length) {
+        group.append(el("dt", "", "Helpful functions"));
+        const list = el("dd", "choices-functions");
+        helpers.forEach(g => {
+          const active = selectedFunctions.has(g);
+          const btn = el("button", "choices-function" + (active ? " is-active" : ""), g);
+          btn.type = "button";
+          btn.setAttribute("aria-pressed", String(active));
+          // Full name on hover (the pill may cut it off with "..."), plus what clicking does
+          btn.title = `${g}: ` + (active ? "applied, click to remove from the Functions filter" : "click to add to the Functions filter");
+          btn.addEventListener("click", () => toggleFunction(g));
+          list.append(btn);
+        });
+        group.append(list);
+      }
+
+      box.append(group);
+    });
+
+    choicesSummaryEl.append(box);
+    choicesSummaryEl.append(el("p", "choices-note",
+      "These functions aren't applied to your results yet. Click one above, or choose it from the Functions filter, to narrow down products."));
+  }
+
+  renderActiveFilters(); // show any choices saved from a previous visit
+
+  /* Resizable sidebar: drag the handle (or use arrow keys); the width is saved in localStorage.
+     Double-click the handle to go back to the default width from the CSS. */
+  const layoutEl     = document.querySelector(".catalog-layout");
+  const sidebarEl    = document.querySelector(".catalog-sidebar");
+  const resizerEl    = document.getElementById("sidebar-resizer");
+  const WIDTH_KEY    = "catalogSidebarWidth";
+  const MIN_WIDTH    = 220;
+  const maxWidth     = () => Math.max(MIN_WIDTH, layoutEl.clientWidth * 0.5); // never more than half the screen
+  const clampWidth   = w => Math.min(maxWidth(), Math.max(MIN_WIDTH, w));
+
+  function setSidebarWidth(w) {
+    sidebarEl.style.flexBasis = `${Math.round(clampWidth(w))}px`;
+  }
+  function saveSidebarWidth() {
+    try { localStorage.setItem(WIDTH_KEY, String(sidebarEl.getBoundingClientRect().width)); } catch {}
+  }
+
+  try {
+    const saved = Number(localStorage.getItem(WIDTH_KEY));
+    if (saved) setSidebarWidth(saved);
+  } catch {}
+
+  resizerEl.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sidebarEl.getBoundingClientRect().width;
+    resizerEl.setPointerCapture(e.pointerId);
+    document.body.classList.add("is-resizing");
+
+    const onMove = ev => setSidebarWidth(startW + (ev.clientX - startX));
+    const onUp = () => {
+      resizerEl.removeEventListener("pointermove", onMove);
+      resizerEl.removeEventListener("pointerup", onUp);
+      resizerEl.removeEventListener("pointercancel", onUp);
+      document.body.classList.remove("is-resizing");
+      saveSidebarWidth();
+    };
+    resizerEl.addEventListener("pointermove", onMove);
+    resizerEl.addEventListener("pointerup", onUp);
+    resizerEl.addEventListener("pointercancel", onUp);
+  });
+
+  resizerEl.addEventListener("keydown", e => {
+    const step = e.shiftKey ? 60 : 20;
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const w = sidebarEl.getBoundingClientRect().width;
+    setSidebarWidth(w + (e.key === "ArrowRight" ? step : -step));
+    saveSidebarWidth();
+  });
+
+  resizerEl.addEventListener("dblclick", () => {
+    sidebarEl.style.flexBasis = "";
+    try { localStorage.removeItem(WIDTH_KEY); } catch {}
+  });
+
+  // If the window shrinks, keep a custom width within the allowed range
+  window.addEventListener("resize", () => {
+    if (sidebarEl.style.flexBasis) setSidebarWidth(parseFloat(sidebarEl.style.flexBasis));
+  });
+
+  /* Filter bar dropdowns: only one open at a time, and clicking anywhere else closes them */
+  const filterDropdowns = document.querySelectorAll(".filter-dropdown");
+  filterDropdowns.forEach(d => d.addEventListener("toggle", () => {
+    if (d.open) filterDropdowns.forEach(other => { if (other !== d) other.open = false; });
+  }));
+  document.addEventListener("click", e => {
+    filterDropdowns.forEach(d => { if (!d.contains(e.target)) d.open = false; });
+  });
 </script>
 
 <style>
@@ -316,37 +553,66 @@
   }
 
   .catalog-layout {
+    --filter-control-height: 40px; /* dropdown buttons and every search bar (product, include, exclude) share this height */
     display: flex;
     width: 100%;
     height: 100%; /* exactly the space under the header, so nothing spills past the window */
   }
 
   /* Sidebar: full height, against the left edge of the screen.
-     Its width follows the screen: 24% of it, but never narrower than 220px or wider than 340px. */
+     Default width follows the screen: 30% of it, but never narrower than 280px or wider than 440px.
+     Dragging the resizer overrides this with a saved px width (inline flex-basis). */
   .catalog-sidebar {
-    flex: 0 0 clamp(220px, 24%, 340px);
+    flex: 0 0 clamp(280px, 30%, 440px);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
     min-width: 0;
     min-height: 0;
     padding: var(--space-lg);
-    border-right: 1.5px solid #c9b8b4; /* same color as the sidebar dividers */
     background-color: var(--color-surface);
     overflow-y: auto; /* only scrolls if open sections make it taller than the window */
   }
 
-  /* Small screens (phones): filters go on top, products underneath */
+  /* Resize handle: the sidebar's right border line, with a wider invisible grab area */
+  .sidebar-resizer {
+    flex: 0 0 8px;
+    margin: 0 -4px; /* grab area overlaps both sides, so the layout doesn't shift */
+    position: relative;
+    z-index: 20;
+    cursor: col-resize;
+    touch-action: none;
+    background: linear-gradient(#c9b8b4, #c9b8b4) center / 1.5px 100% no-repeat; /* same color as the sidebar dividers */
+  }
+
+  .sidebar-resizer:hover,
+  .sidebar-resizer:focus-visible,
+  body.is-resizing .sidebar-resizer {
+    outline: none;
+    background-size: 4px 100%;
+    background-image: linear-gradient(var(--color-accent-checklist), var(--color-accent-checklist));
+  }
+
+  /* While dragging: no text selection, and the resize cursor everywhere */
+  body.is-resizing {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  /* Small screens (phones): filters go on top, products underneath; no resizing */
   @media (max-width: 700px) {
     .catalog-layout {
       flex-direction: column;
     }
 
     .catalog-sidebar {
-      flex: 0 1 auto;
+      flex: 0 1 auto !important; /* ignore a width saved from a bigger screen */
       max-height: 45%;
-      border-right: none;
       border-bottom: 1.5px solid #c9b8b4;
+    }
+
+    .sidebar-resizer {
+      display: none;
     }
   }
 
@@ -370,37 +636,293 @@
     margin: 0;
   }
 
-  /* Accordion (Concerns / Functions) */
-  .sidebar-accordion {
-    list-style: none;
-    padding: 0;
+  /* Summary at the top of the sidebar */
+  .sidebar-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
   }
 
-  .sidebar-accordion summary {
+  /* Small "REMINDER" label above everything */
+  .choices-eyebrow {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-checklist);
+  }
+
+  /* Main message: same size and weight as the "Include Ingredients" headings */
+  .choices-heading {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-text);
+  }
+
+  /* The box: green stripe on the left, light beige background */
+  .choices-list {
     display: flex;
-    align-items: center;
-    gap: var(--space-md);
+    flex-direction: column;
+    margin: 0;
+    padding: var(--space-md);
+    border-left: 3px solid var(--color-accent-checklist); /* same green as a checked box */
+    background-color: var(--color-bg);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+
+  /* One concern + its functions: small muted label on the left, value on the right */
+  .choices-group {
+    display: grid;
+    /* Fixed label column + a value column that can't grow past the box, so long text gets "..." instead */
+    grid-template-columns: 80px minmax(0, 1fr);
+    column-gap: var(--space-lg); /* space between the labels and their values */
+    row-gap: var(--space-sm);
+    align-items: start; /* each label lines up with the top of its value */
+  }
+
+  /* More than one concern: a thin line between them */
+  .choices-group + .choices-group {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid #c9b8b4; /* same color as the sidebar dividers */
+  }
+
+  .choices-list dt {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    overflow-wrap: break-word; /* "HELPFUL FUNCTIONS" sits on two short lines in the 80px column */
+  }
+
+  .choices-list dd {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .choices-concern {
     font-size: var(--font-size-lg);
     font-weight: 700;
+    /* Enough line height that letters like "g" aren't clipped by overflow: hidden below;
+       the small negative margin pulls it back up so its top still lines up with the label */
+    line-height: 1.35;
+    margin-top: -0.15em !important; /* beats the 0 margin on .choices-list dd */
+    /* One line; a name too long for the box ends in "..." (full name in the tooltip) */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: var(--color-text);
-    cursor: pointer;
-    list-style: none;
   }
 
-  .sidebar-accordion summary::-webkit-details-marker { display: none; }
+  /* Suggested functions: small pill buttons; filled green once applied */
+  .choices-functions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
 
-  .sidebar-accordion summary::before {
-    content: "▶";
-    font-size: 0.75rem;
+  .choices-function {
+    padding: 1px 10px;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    text-transform: capitalize;
+    /* One line, never wider than the value column; long names end in "..." (full name in the tooltip) */
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1.5px solid var(--color-accent-checklist);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+  }
+
+  .choices-function:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .choices-function.is-active {
+    color: white;
+    background-color: var(--color-accent-checklist);
+  }
+
+  .choices-function.is-active::before {
+    content: "✓ ";
+  }
+
+  /* The italic "these aren't applied yet" note: a soft info line under the box */
+  .choices-note {
+    margin: 0;
+    padding-left: var(--space-md); /* lines up with the text inside the box */
+    line-height: 1.4;
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+
+  /* Right side: filter bar stacked on top of the product box */
+  .catalog-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* White horizontal filter bar above the products */
+  .filter-bar {
+    position: relative;
+    z-index: 10; /* dropdown panels sit over the product box */
+    /* Two groups, pushed to opposite ends: [filters + chips] .......... [search].
+       On a narrow screen the search wraps under the whole filters group (never between them). */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start; /* search lines up with the dropdown buttons, not the chips */
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background-color: var(--color-surface);
+    border-bottom: 1.5px solid #c9b8b4; /* same color as the sidebar dividers */
+  }
+
+  /* Left group: buttons on top, chips underneath */
+  .filter-bar-filters {
+    flex: 1 1 0; /* takes the leftover space; a long row of chips wraps inside it instead of pushing the search down */
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  /* Right group */
+  .filter-bar .product-search {
+    flex: 0 1 360px;
+    min-width: 220px;
+    margin-top: 0;
+  }
+
+  /* Filter dropdown (Concerns / Functions): a button that opens a panel underneath */
+  .filter-dropdown {
+    position: relative;
+  }
+
+  .filter-dropdown summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    box-sizing: border-box;
+    height: var(--filter-control-height);
+    padding: 0 16px;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--color-text);
+    border: 1.5px solid #c9b8b4;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .filter-dropdown summary::-webkit-details-marker { display: none; }
+
+  .filter-dropdown summary::after {
+    content: "▼";
+    font-size: 0.65rem;
     flex-shrink: 0;
   }
 
-  .sidebar-accordion[open] summary::before {
-    content: "▼";
+  .filter-dropdown[open] summary {
+    background-color: var(--color-bg);
   }
 
-  /* Box around each checkbox list */
+  .filter-dropdown[open] summary::after {
+    content: "▲";
+  }
+
+  /* "(2)" after the dropdown name: how many are chosen */
+  .filter-count {
+    font-weight: 400;
+    color: var(--color-accent-checklist);
+  }
+
+  /* Row of chosen-filter chips, under the dropdown buttons */
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .active-filters[hidden] { display: none; }
+
+  .active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 4px 6px 4px 12px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    text-transform: capitalize;
+    background-color: var(--color-bg);
+    border: 1.5px solid var(--color-accent-checklist); /* same green as a checked box */
+    border-radius: var(--radius-pill);
+  }
+
+  .active-filter-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--color-text-muted);
+    background: none;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .active-filter-remove:hover {
+    color: var(--color-text);
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .active-filters-clear {
+    padding: 4px 8px;
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    color: var(--color-text-muted);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .active-filters-clear:hover {
+    color: var(--color-text);
+  }
+
+  /* Box around each checkbox list (floats under its button) */
   .accordion-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 260px;
     list-style: none;
     margin: 0;
     max-height: 280px; /* the full height of the Concerns list; longer lists scroll inside the box */
@@ -408,6 +930,8 @@
     padding: var(--space-sm) var(--space-md);
     border: 4px solid var(--color-border-light);
     border-radius: var(--radius-lg); /* 20px */
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
   }
@@ -477,8 +1001,10 @@
   }
 
   .sidebar-search input {
+    box-sizing: border-box;
     width: 100%;
-    padding: 10px 16px 10px 46px;
+    height: var(--filter-control-height); /* same as the dropdown buttons */
+    padding: 0 16px 0 46px;
     font-size: var(--font-size-sm);
     font-style: italic;
     border: none;
