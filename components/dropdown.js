@@ -7,40 +7,35 @@
 //     description=""      -> what the function does, shown when opened
 //     ingredients='[]'    -> the function's ingredients, as a JSON list (shown when opened)
 //                            e.g. '["Glycerin", "Squalane"]'
+//     concern-label=""    -> optional: the selected skin concern's name (e.g. "Anti-Aging"), used in
+//                            the text under "Common Ingredients"
+//     concern-group=""    -> optional: how this function relates to that concern: gofor / thesehelp / avoid
 //   ></function-dropdown>
 //
 // These attributes are filled in from the data we retrieve
 // (see renderFunctions() in pages/functions.html and data/functions.json).
 
-// How many pills to build when a dropdown first opens. The rest are built on "more ingredients".
-const INITIAL_PILL_COUNT = 30;
+// Lists with at least this many ingredients get a search box
+const SEARCH_MIN_INGREDIENTS = 10;
 
 class MyDropdown extends HTMLElement {
   static get observedAttributes() {
-    return ["color", "function-label", "description", "ingredients"];
+    return ["color", "function-label", "description", "ingredients", "concern-label", "concern-group"];
   }
 
     // Open and Closing the dropdown
   connectedCallback() {
     this.render();
+
+    // Ingredient search: typing filters the pills
+    this.addEventListener("input", (event) => {
+      if (event.target.closest(".ingredient-search input")) this.filterIngredients(event.target.value);
+    });
     this.addEventListener("click", (event) => {
       // "Explore products": remember this function so the catalog starts with it checked
       if (event.target.closest(".explore-btn")) {
         FilterLists.setSelectedFunction(this.getAttribute("function-label") || "");
         return; // the link then opens the catalog as usual
-      }
-
-      // Bottom "more/fewer ingredients" button, or the top "fewer ingredients" button
-      if (event.target.closest(".more-ingredients, .fewer-ingredients-top")) {
-        const list = this.querySelector(".ingredients");
-        const more = this.querySelector(".more-ingredients");
-        const fewerTop = this.querySelector(".fewer-ingredients-top");
-        const isExpanded = list.classList.toggle("is-expanded");
-        if (isExpanded) this.showPills(this.ingredientNames.length);
-        more.setAttribute("aria-expanded", String(isExpanded));
-        more.querySelector(".more-text").textContent = isExpanded ? "fewer ingredients" : "more ingredients";
-        fewerTop.hidden = !isExpanded; // top button only shows while the list is expanded
-        return;
       }
 
       const toggle = event.target.closest(".dropdown-toggle");
@@ -51,7 +46,7 @@ class MyDropdown extends HTMLElement {
       content.hidden = isOpen;
       toggle.setAttribute("aria-expanded", String(!isOpen));
       this.classList.toggle("is-open", !isOpen);
-      if (!isOpen) this.showPills(INITIAL_PILL_COUNT);
+      if (!isOpen) this.showPills();
     });
   }
 
@@ -84,21 +79,35 @@ class MyDropdown extends HTMLElement {
           <p class="description">${escapeText(description)}</p>
 
           <h3 class="ingredients-heading">Common Ingredients</h3>
+          <p class="ingredients-intro">${ingredientsIntro(
+            label,
+            this.getAttribute("concern-label"),
+            this.getAttribute("concern-group")
+          )}</p>
           ${ingredients.length
-            ? `<!-- Only shows while the list is expanded, so you can collapse it without scrolling down -->
-               <button type="button" class="fewer-ingredients-top" aria-expanded="true" hidden>
-                 <span class="more-text">fewer ingredients</span>
-                 <span class="arrow" aria-hidden="true"></span>
-               </button>
-
-               <!-- Pills are added by showPills() when the dropdown opens, so closed dropdowns stay fast -->
+            ? `<!-- The box: search on top (long lists only), pills underneath -->
+               <div class="ingredients-panel">`
+            : ""}
+          ${ingredients.length >= SEARCH_MIN_INGREDIENTS
+            ? `<div class="ingredient-search">
+                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                 <input
+                   type="search"
+                   placeholder="Search ${ingredients.length} ingredients"
+                   aria-label="Search ${escapeText(label)} ingredients"
+                   autocomplete="off"
+                 />
+               </div>
+               <p class="ingredient-search-message" aria-live="polite">Type a name to find it in this list.</p>`
+            : ""}
+          ${ingredients.length
+            ? `<!-- Pills are added by showPills() when the dropdown opens, so closed dropdowns stay fast.
+                    Fixed height: long lists scroll inside it. -->
                <div class="ingredients"></div>
 
-               <!-- Only shows when the pills don't fit on one line (see watchIngredients) -->
-               <button type="button" class="more-ingredients" aria-expanded="false" hidden>
-                 <span class="more-text">more ingredients</span>
-                 <span class="arrow" aria-hidden="true"></span>
-               </button>`
+               <!-- Only shows when there are more pills than fit (see updateScrollHint) -->
+               <p class="scroll-hint" hidden>Scroll to view more ingredients</p>
+               </div>`
             : `<p class="placeholder">Ingredients go here.</p>`}
           </div>
 
@@ -182,6 +191,7 @@ class MyDropdown extends HTMLElement {
           align-items: center;
           gap: var(--space-sm);
           align-self: flex-end; /* right side */
+          margin-top: var(--space-lg); /* space between the ingredients box and this button */
           padding: var(--space-sm) var(--space-lg);
           border-radius: var(--radius-pill);
           border: 2px solid var(--color-border-dark);
@@ -232,49 +242,118 @@ class MyDropdown extends HTMLElement {
           color: var(--color-text-muted);
         }
 
-        /* row of ingredient pills */
+        /* Ingredient pills: a fixed-height area; long lists scroll inside it instead of stretching the page */
         function-dropdown .ingredients {
           display: flex;
           flex-wrap: wrap;
+          align-content: flex-start;
           gap: var(--space-md);
-          padding-bottom: var(--space-lg); 
-          max-height: calc(27px + var(--space-sm));
-          overflow: hidden;
+          max-height: 260px;
+          overflow-y: auto; /* faint scrollbar style comes from index.css */
         }
 
-        function-dropdown .ingredients.is-expanded {
-          max-height: none; /* show every line */
-        }
-
-        /* "more ingredients" button (bottom) and "fewer ingredients" button (top) */
-        function-dropdown .more-ingredients,
-        function-dropdown .fewer-ingredients-top {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--space-sm);
-          margin: 0;
-          padding: 0;
-          border: none;
-          background: none;
-          color: var(--color-text-muted);
-          font-family: var(--font-base);
+        /* "Scroll to view more ingredients" under the pills */
+        function-dropdown .dropdown-content .scroll-hint {
+          margin: var(--space-sm) 0 0;
           font-size: var(--font-size-sm);
-          font-weight: 600;
-          cursor: pointer;
+          font-style: italic;
+          color: var(--color-text-muted);
         }
 
-        function-dropdown .fewer-ingredients-top {
-          margin-bottom: var(--space-md); /* space above the pills */
-        }
-
-        function-dropdown .more-ingredients[hidden],
-        function-dropdown .fewer-ingredients-top[hidden] {
+        function-dropdown .scroll-hint[hidden] {
           display: none;
         }
 
-        function-dropdown .more-ingredients[aria-expanded="true"] .arrow,
-        function-dropdown .fewer-ingredients-top .arrow {
-          transform: rotate(180deg);
+        /* Text under "Common Ingredients" */
+        function-dropdown .dropdown-content .ingredients-intro {
+          margin: 0 0 var(--space-md);
+          font-size: var(--font-size-base);
+          font-style: italic;
+          color: var(--color-text-muted);
+        }
+
+        function-dropdown .ingredients-intro strong {
+          color: var(--color-text);
+        }
+
+        /* Ingredient search box */
+        function-dropdown .ingredient-search {
+          position: relative;
+          display: flex;
+          align-items: center;
+          max-width: 360px;
+        }
+
+        function-dropdown .ingredient-search i {
+          position: absolute;
+          left: 16px;
+          color: var(--color-text-muted);
+          pointer-events: none;
+        }
+
+        function-dropdown .ingredient-search input {
+          box-sizing: border-box;
+          width: 100%;
+          height: 40px;
+          padding: 0 16px 0 44px;
+          font-family: var(--font-base);
+          font-size: var(--font-size-sm);
+          color: var(--color-text);
+          border: none;
+          border-radius: var(--radius-pill);
+          background-color: var(--color-accent-muted);
+          box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.10);
+        }
+
+        function-dropdown .ingredient-search input::placeholder {
+          font-style: italic;
+          color: var(--color-text-muted);
+        }
+
+        function-dropdown .ingredient-search input:focus {
+          outline: none;
+          box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Hint / result message under the search box */
+        function-dropdown .dropdown-content .ingredient-search-message {
+          margin: var(--space-xs) 0 var(--space-md) var(--space-md);
+          font-size: var(--font-size-sm);
+          font-style: italic;
+          color: var(--color-text-muted);
+        }
+
+        /* Pills that don't match the search */
+        function-dropdown ingredient-pill[hidden] {
+          display: none !important;
+        }
+
+        /* The box: always shown, holds the search bar (on top) and the pills */
+        function-dropdown .ingredients-panel {
+          padding: var(--space-md);
+          border: 1.5px solid var(--color-accent-muted); /* soft pink outline, so the box shows on the beige */
+          border-radius: var(--radius-md);
+          background-color: var(--color-bg); /* same beige as the dropdown, no white */
+        }
+
+        /* A pill too wide for the box: it stops at the box's edge and its name ends in "...".
+           Pills that fit are unchanged. updatePillTooltips() adds the full name as a tooltip on cut-off ones. */
+        function-dropdown .ingredients ingredient-pill {
+          max-width: 100%;
+          min-width: 0;
+        }
+
+        function-dropdown .ingredients ingredient-pill .pill-label {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.3; /* a bit taller than the pill's 1, so overflow: hidden doesn't clip letters like "g" */
+          margin-block: -0.15em; /* ...without making the pill taller */
+        }
+
+        function-dropdown .ingredients ingredient-pill > button,
+        function-dropdown .ingredients ingredient-pill .pill-actions {
+          flex-shrink: 0; /* only the name shrinks, never the icons */
         }
 
         function-dropdown .placeholder {
@@ -285,32 +364,82 @@ class MyDropdown extends HTMLElement {
     `;
 
     this.watchIngredients();
-    if (isOpen) this.showPills(INITIAL_PILL_COUNT);
+    if (isOpen) this.showPills();
   }
 
-  // Adds pills until the first `count` ingredients have one (needs pill.js)
-  showPills(count) {
+  // Builds every ingredient's pill the first time the dropdown opens (needs pill.js)
+  showPills() {
     const list = this.querySelector(".ingredients");
-    if (!list || count <= this.pillsShown) return;
+    if (!list || this.pillsShown) return;
 
-    const newPills = this.ingredientNames
-      .slice(this.pillsShown, count)
+    list.innerHTML = this.ingredientNames
       .map((name) => `<ingredient-pill label="${escapeText(name)}"></ingredient-pill>`)
       .join("");
-    list.insertAdjacentHTML("beforeend", newPills);
-    this.pillsShown = count;
+    this.pillsShown = this.ingredientNames.length;
+    requestAnimationFrame(() => { // after the new pills have their size
+      this.updatePillTooltips();
+      this.updateScrollHint();
+    });
+  }
+
+  // "Scroll to view more ingredients" only shows when there are more pills than fit in the box
+  updateScrollHint() {
+    const list = this.querySelector(".ingredients");
+    const hint = this.querySelector(".scroll-hint");
+    if (list && hint) hint.hidden = list.scrollHeight <= list.clientHeight + 1;
+  }
+
+  // Cut-off names (ending in "...") get the full name as a tooltip; names that fit get none
+  updatePillTooltips() {
+    this.querySelectorAll(".ingredients ingredient-pill").forEach((pill) => {
+      const label = pill.querySelector(".pill-label");
+      if (!label) return;
+      if (label.scrollWidth > label.clientWidth) label.title = pill.getAttribute("label") || label.textContent;
+      else label.removeAttribute("title");
+    });
+  }
+
+  // Shows only the pills whose name contains the query, inside the scrolling box.
+  filterIngredients(rawQuery) {
+    const query = rawQuery.trim().toLowerCase();
+    const list = this.querySelector(".ingredients");
+    const message = this.querySelector(".ingredient-search-message");
+    if (!list) return;
+    list.scrollTop = 0;
+    requestAnimationFrame(() => { // after the pills are shown/hidden
+      this.updatePillTooltips(); // pills shown again need their tooltip re-checked
+      this.updateScrollHint();   // fewer pills may now fit without scrolling
+    });
+
+    if (!query) {
+      list.querySelectorAll("ingredient-pill").forEach((pill) => { pill.hidden = false; });
+      message.textContent = "Type a name to find it in this list.";
+      return;
+    }
+
+    let matches = 0;
+    list.querySelectorAll("ingredient-pill").forEach((pill) => {
+      const match = (pill.getAttribute("label") || "").toLowerCase().includes(query);
+      pill.hidden = !match;
+      if (match) matches++;
+    });
+
+    const shown = rawQuery.trim();
+    message.textContent = matches
+      ? `${matches} of ${this.ingredientNames.length} ingredients match "${shown}".`
+      : `No ingredients match "${shown}". Try a shorter or different spelling.`;
   }
 
   watchIngredients() {
     if (this.ingredientsObserver) this.ingredientsObserver.disconnect(); // stop watching the old row (render replaced it)
 
     const list = this.querySelector(".ingredients");
-    const more = this.querySelector(".more-ingredients");
-    if (!list || !more) return;
+    if (!list) return;
 
+    // The box changed size: different names may be cut off, and the scroll hint may change
     this.ingredientsObserver = new ResizeObserver(() => {
-      if (list.classList.contains("is-expanded")) return; // already showing everything, keep the button
-      more.hidden = list.scrollHeight <= list.clientHeight; // hidden pills exist only if the content is taller than the box
+      this.updatePillTooltips();
+      this.updateScrollHint();
     });
     this.ingredientsObserver.observe(list);
   }
@@ -326,6 +455,20 @@ function parseIngredients(json) {
   } catch {
     return []; // bad JSON -> show the placeholder
   }
+}
+
+// The sentence under "Common Ingredients". Names the skin concern when one is selected.
+function ingredientsIntro(fnLabel, concernLabel, group) {
+  const fn = `<strong>${escapeText(fnLabel)}</strong>`;
+  if (!concernLabel) {
+    return `The most notable and commonly used ingredients for the ${fn} function in skincare products.`;
+  }
+  const concern = `<strong>${escapeText(concernLabel)}</strong>`;
+  if (group === "avoid") {
+    return `The most notable and commonly used ingredients for the ${fn} function. ` +
+      `If your concern is ${concern}, watch out for these, since this function can make it worse.`;
+  }
+  return `The most notable and commonly used ingredients for the ${fn} function in ${concern} products.`;
 }
 
 // Makes text safe to put into innerHTML (the data comes from outside).

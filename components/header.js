@@ -4,15 +4,21 @@
 // These are real page-to-page links now (full navigation), not hash routes.
 // The header's styles live in the <style> block below, so pages don't need a separate <link>.
 
+// Optional attribute:
+//   no-search  -> hides the search bar (e.g. <my-header no-search></my-header> on the catalog,
+//                 which has its own product search in the filter bar)
+
 class MyHeader extends HTMLElement {
   connectedCallback() {
+    const showSearch = !this.hasAttribute("no-search");
     this.innerHTML = `
       <a href="home.html" class="logo">MySkindex</a>
+        ${showSearch ? `
         <!-- Pressing Enter submits this form, which goes to catalog.html?q=<what you typed> -->
         <form class="search" action="catalog.html" method="get" role="search">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
           <input type="text" name="q" placeholder="Search Products" aria-label="Search" />
-        </form>
+        </form>` : ""}
 
       <style>
         my-header {
@@ -68,7 +74,7 @@ class MyHeader extends HTMLElement {
 
     // Keep the search text in the box after landing on the catalog page.
     const query = new URLSearchParams(window.location.search).get("q");
-    if (query) {
+    if (query && showSearch) {
       this.querySelector(".search input").value = query;
     }
   }
